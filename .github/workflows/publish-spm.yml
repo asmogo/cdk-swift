@@ -10,7 +10,7 @@ on:
       cdk_repo:
         description: 'CDK repository (owner/repo format)'
         required: true
-        default: 'davidcaseria/cdk'
+        default: 'asmogo/cdk'
         type: string
       cdk_ref:
         description: 'CDK repository ref (branch/tag)'
