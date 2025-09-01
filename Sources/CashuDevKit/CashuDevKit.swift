@@ -7587,98 +7587,91 @@ public enum FfiError: Swift.Error {
     /**
      * Generic error with message
      */
-    case Generic(message: String)
-    
+    case Generic(msg: String
+    )
     /**
      * Amount overflow
      */
-    case AmountOverflow(message: String)
-    
+    case AmountOverflow
     /**
      * Division by zero
      */
-    case DivisionByZero(message: String)
-    
+    case DivisionByZero
     /**
      * Amount error
      */
-    case Amount(message: String)
-    
+    case Amount(msg: String
+    )
     /**
      * Payment failed
      */
-    case PaymentFailed(message: String)
-    
+    case PaymentFailed
     /**
      * Payment pending
      */
-    case PaymentPending(message: String)
-    
+    case PaymentPending
     /**
      * Insufficient funds
      */
-    case InsufficientFunds(message: String)
-    
+    case InsufficientFunds
     /**
      * Database error
      */
-    case Database(message: String)
-    
+    case Database(msg: String
+    )
     /**
      * Network error
      */
-    case Network(message: String)
-    
+    case Network(msg: String
+    )
     /**
      * Invalid token
      */
-    case InvalidToken(message: String)
-    
+    case InvalidToken(msg: String
+    )
     /**
      * Wallet error
      */
-    case Wallet(message: String)
-    
+    case Wallet(msg: String
+    )
     /**
      * Keyset unknown
      */
-    case KeysetUnknown(message: String)
-    
+    case KeysetUnknown
     /**
      * Unit not supported
      */
-    case UnitNotSupported(message: String)
-    
+    case UnitNotSupported
     /**
      * Runtime task join error
      */
-    case RuntimeTaskJoin(message: String)
-    
+    case RuntimeTaskJoin(msg: String
+    )
     /**
      * Invalid mnemonic phrase
      */
-    case InvalidMnemonic(message: String)
-    
+    case InvalidMnemonic(msg: String
+    )
     /**
      * URL parsing error
      */
-    case InvalidUrl(message: String)
-    
+    case InvalidUrl(msg: String
+    )
     /**
      * Hex format error
      */
-    case InvalidHex(message: String)
-    
+    case InvalidHex(msg: String
+    )
     /**
      * Cryptographic key parsing error
      */
-    case InvalidCryptographicKey(message: String)
-    
+    case InvalidCryptographicKey(msg: String
+    )
     /**
      * Serialization/deserialization error
      */
-    case Serialization(message: String)
-    
+    case Serialization(msg: String
+    )
 }
 
 
@@ -7696,83 +7689,50 @@ public struct FfiConverterTypeFfiError: FfiConverterRustBuffer {
 
         
         case 1: return .Generic(
-            message: try FfiConverterString.read(from: &buf)
-        )
-        
-        case 2: return .AmountOverflow(
-            message: try FfiConverterString.read(from: &buf)
-        )
-        
-        case 3: return .DivisionByZero(
-            message: try FfiConverterString.read(from: &buf)
-        )
-        
+            msg: try FfiConverterString.read(from: &buf)
+            )
+        case 2: return .AmountOverflow
+        case 3: return .DivisionByZero
         case 4: return .Amount(
-            message: try FfiConverterString.read(from: &buf)
-        )
-        
-        case 5: return .PaymentFailed(
-            message: try FfiConverterString.read(from: &buf)
-        )
-        
-        case 6: return .PaymentPending(
-            message: try FfiConverterString.read(from: &buf)
-        )
-        
-        case 7: return .InsufficientFunds(
-            message: try FfiConverterString.read(from: &buf)
-        )
-        
+            msg: try FfiConverterString.read(from: &buf)
+            )
+        case 5: return .PaymentFailed
+        case 6: return .PaymentPending
+        case 7: return .InsufficientFunds
         case 8: return .Database(
-            message: try FfiConverterString.read(from: &buf)
-        )
-        
+            msg: try FfiConverterString.read(from: &buf)
+            )
         case 9: return .Network(
-            message: try FfiConverterString.read(from: &buf)
-        )
-        
+            msg: try FfiConverterString.read(from: &buf)
+            )
         case 10: return .InvalidToken(
-            message: try FfiConverterString.read(from: &buf)
-        )
-        
+            msg: try FfiConverterString.read(from: &buf)
+            )
         case 11: return .Wallet(
-            message: try FfiConverterString.read(from: &buf)
-        )
-        
-        case 12: return .KeysetUnknown(
-            message: try FfiConverterString.read(from: &buf)
-        )
-        
-        case 13: return .UnitNotSupported(
-            message: try FfiConverterString.read(from: &buf)
-        )
-        
+            msg: try FfiConverterString.read(from: &buf)
+            )
+        case 12: return .KeysetUnknown
+        case 13: return .UnitNotSupported
         case 14: return .RuntimeTaskJoin(
-            message: try FfiConverterString.read(from: &buf)
-        )
-        
+            msg: try FfiConverterString.read(from: &buf)
+            )
         case 15: return .InvalidMnemonic(
-            message: try FfiConverterString.read(from: &buf)
-        )
-        
+            msg: try FfiConverterString.read(from: &buf)
+            )
         case 16: return .InvalidUrl(
-            message: try FfiConverterString.read(from: &buf)
-        )
-        
+            msg: try FfiConverterString.read(from: &buf)
+            )
         case 17: return .InvalidHex(
-            message: try FfiConverterString.read(from: &buf)
-        )
-        
+            msg: try FfiConverterString.read(from: &buf)
+            )
         case 18: return .InvalidCryptographicKey(
-            message: try FfiConverterString.read(from: &buf)
-        )
-        
+            msg: try FfiConverterString.read(from: &buf)
+            )
         case 19: return .Serialization(
-            message: try FfiConverterString.read(from: &buf)
-        )
-        
+            msg: try FfiConverterString.read(from: &buf)
+            )
 
-        default: throw UniffiInternalError.unexpectedEnumCase
+         default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
 
@@ -7782,46 +7742,94 @@ public struct FfiConverterTypeFfiError: FfiConverterRustBuffer {
         
 
         
-        case .Generic(_ /* message is ignored*/):
-            writeInt(&buf, Int32(1))
-        case .AmountOverflow(_ /* message is ignored*/):
-            writeInt(&buf, Int32(2))
-        case .DivisionByZero(_ /* message is ignored*/):
-            writeInt(&buf, Int32(3))
-        case .Amount(_ /* message is ignored*/):
-            writeInt(&buf, Int32(4))
-        case .PaymentFailed(_ /* message is ignored*/):
-            writeInt(&buf, Int32(5))
-        case .PaymentPending(_ /* message is ignored*/):
-            writeInt(&buf, Int32(6))
-        case .InsufficientFunds(_ /* message is ignored*/):
-            writeInt(&buf, Int32(7))
-        case .Database(_ /* message is ignored*/):
-            writeInt(&buf, Int32(8))
-        case .Network(_ /* message is ignored*/):
-            writeInt(&buf, Int32(9))
-        case .InvalidToken(_ /* message is ignored*/):
-            writeInt(&buf, Int32(10))
-        case .Wallet(_ /* message is ignored*/):
-            writeInt(&buf, Int32(11))
-        case .KeysetUnknown(_ /* message is ignored*/):
-            writeInt(&buf, Int32(12))
-        case .UnitNotSupported(_ /* message is ignored*/):
-            writeInt(&buf, Int32(13))
-        case .RuntimeTaskJoin(_ /* message is ignored*/):
-            writeInt(&buf, Int32(14))
-        case .InvalidMnemonic(_ /* message is ignored*/):
-            writeInt(&buf, Int32(15))
-        case .InvalidUrl(_ /* message is ignored*/):
-            writeInt(&buf, Int32(16))
-        case .InvalidHex(_ /* message is ignored*/):
-            writeInt(&buf, Int32(17))
-        case .InvalidCryptographicKey(_ /* message is ignored*/):
-            writeInt(&buf, Int32(18))
-        case .Serialization(_ /* message is ignored*/):
-            writeInt(&buf, Int32(19))
-
         
+        case let .Generic(msg):
+            writeInt(&buf, Int32(1))
+            FfiConverterString.write(msg, into: &buf)
+            
+        
+        case .AmountOverflow:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .DivisionByZero:
+            writeInt(&buf, Int32(3))
+        
+        
+        case let .Amount(msg):
+            writeInt(&buf, Int32(4))
+            FfiConverterString.write(msg, into: &buf)
+            
+        
+        case .PaymentFailed:
+            writeInt(&buf, Int32(5))
+        
+        
+        case .PaymentPending:
+            writeInt(&buf, Int32(6))
+        
+        
+        case .InsufficientFunds:
+            writeInt(&buf, Int32(7))
+        
+        
+        case let .Database(msg):
+            writeInt(&buf, Int32(8))
+            FfiConverterString.write(msg, into: &buf)
+            
+        
+        case let .Network(msg):
+            writeInt(&buf, Int32(9))
+            FfiConverterString.write(msg, into: &buf)
+            
+        
+        case let .InvalidToken(msg):
+            writeInt(&buf, Int32(10))
+            FfiConverterString.write(msg, into: &buf)
+            
+        
+        case let .Wallet(msg):
+            writeInt(&buf, Int32(11))
+            FfiConverterString.write(msg, into: &buf)
+            
+        
+        case .KeysetUnknown:
+            writeInt(&buf, Int32(12))
+        
+        
+        case .UnitNotSupported:
+            writeInt(&buf, Int32(13))
+        
+        
+        case let .RuntimeTaskJoin(msg):
+            writeInt(&buf, Int32(14))
+            FfiConverterString.write(msg, into: &buf)
+            
+        
+        case let .InvalidMnemonic(msg):
+            writeInt(&buf, Int32(15))
+            FfiConverterString.write(msg, into: &buf)
+            
+        
+        case let .InvalidUrl(msg):
+            writeInt(&buf, Int32(16))
+            FfiConverterString.write(msg, into: &buf)
+            
+        
+        case let .InvalidHex(msg):
+            writeInt(&buf, Int32(17))
+            FfiConverterString.write(msg, into: &buf)
+            
+        
+        case let .InvalidCryptographicKey(msg):
+            writeInt(&buf, Int32(18))
+            FfiConverterString.write(msg, into: &buf)
+            
+        
+        case let .Serialization(msg):
+            writeInt(&buf, Int32(19))
+            FfiConverterString.write(msg, into: &buf)
+            
         }
     }
 }
