@@ -1694,6 +1694,11 @@ public protocol TokenProtocol: AnyObject, Sendable {
     func toRawBytes() throws  -> Data
     
     /**
+     * Convert token to string representation
+     */
+    func toV3String()  -> String
+    
+    /**
      * Get the currency unit
      */
     func unit()  -> CurrencyUnit?
@@ -1806,6 +1811,16 @@ open func proofsSimple()throws  -> [Proof]  {
 open func toRawBytes()throws  -> Data  {
     return try  FfiConverterData.lift(try rustCallWithError(FfiConverterTypeFfiError_lift) {
     uniffi_cdk_ffi_fn_method_token_to_raw_bytes(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+    /**
+     * Convert token to string representation
+     */
+open func toV3String() -> String  {
+    return try!  FfiConverterString.lift(try! rustCall() {
+    uniffi_cdk_ffi_fn_method_token_to_v3_string(self.uniffiClonePointer(),$0
     )
 })
 }
@@ -10611,6 +10626,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_method_token_to_raw_bytes() != 25396) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_token_to_v3_string() != 10852) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_method_token_unit() != 55723) {
