@@ -7110,6 +7110,109 @@ public func FfiConverterTypeKeys_lower(_ value: Keys) -> RustBuffer {
 
 
 /**
+ * FFI-compatible MeltMethodSettings (NUT-05)
+ */
+public struct MeltMethodSettings {
+    public var method: PaymentMethod
+    public var unit: CurrencyUnit
+    public var minAmount: Amount?
+    public var maxAmount: Amount?
+    /**
+     * For bolt11, whether mint supports amountless invoices
+     */
+    public var amountless: Bool?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(method: PaymentMethod, unit: CurrencyUnit, minAmount: Amount?, maxAmount: Amount?, 
+        /**
+         * For bolt11, whether mint supports amountless invoices
+         */amountless: Bool?) {
+        self.method = method
+        self.unit = unit
+        self.minAmount = minAmount
+        self.maxAmount = maxAmount
+        self.amountless = amountless
+    }
+}
+
+#if compiler(>=6)
+extension MeltMethodSettings: Sendable {}
+#endif
+
+
+extension MeltMethodSettings: Equatable, Hashable {
+    public static func ==(lhs: MeltMethodSettings, rhs: MeltMethodSettings) -> Bool {
+        if lhs.method != rhs.method {
+            return false
+        }
+        if lhs.unit != rhs.unit {
+            return false
+        }
+        if lhs.minAmount != rhs.minAmount {
+            return false
+        }
+        if lhs.maxAmount != rhs.maxAmount {
+            return false
+        }
+        if lhs.amountless != rhs.amountless {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(method)
+        hasher.combine(unit)
+        hasher.combine(minAmount)
+        hasher.combine(maxAmount)
+        hasher.combine(amountless)
+    }
+}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeMeltMethodSettings: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> MeltMethodSettings {
+        return
+            try MeltMethodSettings(
+                method: FfiConverterTypePaymentMethod.read(from: &buf), 
+                unit: FfiConverterTypeCurrencyUnit.read(from: &buf), 
+                minAmount: FfiConverterOptionTypeAmount.read(from: &buf), 
+                maxAmount: FfiConverterOptionTypeAmount.read(from: &buf), 
+                amountless: FfiConverterOptionBool.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: MeltMethodSettings, into buf: inout [UInt8]) {
+        FfiConverterTypePaymentMethod.write(value.method, into: &buf)
+        FfiConverterTypeCurrencyUnit.write(value.unit, into: &buf)
+        FfiConverterOptionTypeAmount.write(value.minAmount, into: &buf)
+        FfiConverterOptionTypeAmount.write(value.maxAmount, into: &buf)
+        FfiConverterOptionBool.write(value.amountless, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeMeltMethodSettings_lift(_ buf: RustBuffer) throws -> MeltMethodSettings {
+    return try FfiConverterTypeMeltMethodSettings.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeMeltMethodSettings_lower(_ value: MeltMethodSettings) -> RustBuffer {
+    return FfiConverterTypeMeltMethodSettings.lower(value)
+}
+
+
+/**
  * FFI-compatible MeltQuote
  */
 public struct MeltQuote {
@@ -7581,6 +7684,109 @@ public func FfiConverterTypeMintInfo_lift(_ buf: RustBuffer) throws -> MintInfo 
 #endif
 public func FfiConverterTypeMintInfo_lower(_ value: MintInfo) -> RustBuffer {
     return FfiConverterTypeMintInfo.lower(value)
+}
+
+
+/**
+ * FFI-compatible MintMethodSettings (NUT-04)
+ */
+public struct MintMethodSettings {
+    public var method: PaymentMethod
+    public var unit: CurrencyUnit
+    public var minAmount: Amount?
+    public var maxAmount: Amount?
+    /**
+     * For bolt11, whether mint supports setting invoice description
+     */
+    public var description: Bool?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(method: PaymentMethod, unit: CurrencyUnit, minAmount: Amount?, maxAmount: Amount?, 
+        /**
+         * For bolt11, whether mint supports setting invoice description
+         */description: Bool?) {
+        self.method = method
+        self.unit = unit
+        self.minAmount = minAmount
+        self.maxAmount = maxAmount
+        self.description = description
+    }
+}
+
+#if compiler(>=6)
+extension MintMethodSettings: Sendable {}
+#endif
+
+
+extension MintMethodSettings: Equatable, Hashable {
+    public static func ==(lhs: MintMethodSettings, rhs: MintMethodSettings) -> Bool {
+        if lhs.method != rhs.method {
+            return false
+        }
+        if lhs.unit != rhs.unit {
+            return false
+        }
+        if lhs.minAmount != rhs.minAmount {
+            return false
+        }
+        if lhs.maxAmount != rhs.maxAmount {
+            return false
+        }
+        if lhs.description != rhs.description {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(method)
+        hasher.combine(unit)
+        hasher.combine(minAmount)
+        hasher.combine(maxAmount)
+        hasher.combine(description)
+    }
+}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeMintMethodSettings: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> MintMethodSettings {
+        return
+            try MintMethodSettings(
+                method: FfiConverterTypePaymentMethod.read(from: &buf), 
+                unit: FfiConverterTypeCurrencyUnit.read(from: &buf), 
+                minAmount: FfiConverterOptionTypeAmount.read(from: &buf), 
+                maxAmount: FfiConverterOptionTypeAmount.read(from: &buf), 
+                description: FfiConverterOptionBool.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: MintMethodSettings, into buf: inout [UInt8]) {
+        FfiConverterTypePaymentMethod.write(value.method, into: &buf)
+        FfiConverterTypeCurrencyUnit.write(value.unit, into: &buf)
+        FfiConverterOptionTypeAmount.write(value.minAmount, into: &buf)
+        FfiConverterOptionTypeAmount.write(value.maxAmount, into: &buf)
+        FfiConverterOptionBool.write(value.description, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeMintMethodSettings_lift(_ buf: RustBuffer) throws -> MintMethodSettings {
+    return try FfiConverterTypeMintMethodSettings.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeMintMethodSettings_lower(_ value: MintMethodSettings) -> RustBuffer {
+    return FfiConverterTypeMintMethodSettings.lower(value)
 }
 
 
@@ -8172,9 +8378,163 @@ public func FfiConverterTypeMultiMintSendOptions_lower(_ value: MultiMintSendOpt
 
 
 /**
- * FFI-compatible Nuts settings (simplified - only includes basic boolean flags)
+ * FFI-compatible Nut04 Settings
+ */
+public struct Nut04Settings {
+    public var methods: [MintMethodSettings]
+    public var disabled: Bool
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(methods: [MintMethodSettings], disabled: Bool) {
+        self.methods = methods
+        self.disabled = disabled
+    }
+}
+
+#if compiler(>=6)
+extension Nut04Settings: Sendable {}
+#endif
+
+
+extension Nut04Settings: Equatable, Hashable {
+    public static func ==(lhs: Nut04Settings, rhs: Nut04Settings) -> Bool {
+        if lhs.methods != rhs.methods {
+            return false
+        }
+        if lhs.disabled != rhs.disabled {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(methods)
+        hasher.combine(disabled)
+    }
+}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeNut04Settings: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Nut04Settings {
+        return
+            try Nut04Settings(
+                methods: FfiConverterSequenceTypeMintMethodSettings.read(from: &buf), 
+                disabled: FfiConverterBool.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: Nut04Settings, into buf: inout [UInt8]) {
+        FfiConverterSequenceTypeMintMethodSettings.write(value.methods, into: &buf)
+        FfiConverterBool.write(value.disabled, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeNut04Settings_lift(_ buf: RustBuffer) throws -> Nut04Settings {
+    return try FfiConverterTypeNut04Settings.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeNut04Settings_lower(_ value: Nut04Settings) -> RustBuffer {
+    return FfiConverterTypeNut04Settings.lower(value)
+}
+
+
+/**
+ * FFI-compatible Nut05 Settings
+ */
+public struct Nut05Settings {
+    public var methods: [MeltMethodSettings]
+    public var disabled: Bool
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(methods: [MeltMethodSettings], disabled: Bool) {
+        self.methods = methods
+        self.disabled = disabled
+    }
+}
+
+#if compiler(>=6)
+extension Nut05Settings: Sendable {}
+#endif
+
+
+extension Nut05Settings: Equatable, Hashable {
+    public static func ==(lhs: Nut05Settings, rhs: Nut05Settings) -> Bool {
+        if lhs.methods != rhs.methods {
+            return false
+        }
+        if lhs.disabled != rhs.disabled {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(methods)
+        hasher.combine(disabled)
+    }
+}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeNut05Settings: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Nut05Settings {
+        return
+            try Nut05Settings(
+                methods: FfiConverterSequenceTypeMeltMethodSettings.read(from: &buf), 
+                disabled: FfiConverterBool.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: Nut05Settings, into buf: inout [UInt8]) {
+        FfiConverterSequenceTypeMeltMethodSettings.write(value.methods, into: &buf)
+        FfiConverterBool.write(value.disabled, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeNut05Settings_lift(_ buf: RustBuffer) throws -> Nut05Settings {
+    return try FfiConverterTypeNut05Settings.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeNut05Settings_lower(_ value: Nut05Settings) -> RustBuffer {
+    return FfiConverterTypeNut05Settings.lower(value)
+}
+
+
+/**
+ * FFI-compatible Nuts settings (extended to include NUT-04 and NUT-05 settings)
  */
 public struct Nuts {
+    /**
+     * NUT04 Settings
+     */
+    public var nut04: Nut04Settings
+    /**
+     * NUT05 Settings
+     */
+    public var nut05: Nut05Settings
     /**
      * NUT07 Settings - Token state check
      */
@@ -8220,6 +8580,12 @@ public struct Nuts {
     // declare one manually.
     public init(
         /**
+         * NUT04 Settings
+         */nut04: Nut04Settings, 
+        /**
+         * NUT05 Settings
+         */nut05: Nut05Settings, 
+        /**
          * NUT07 Settings - Token state check
          */nut07Supported: Bool, 
         /**
@@ -8249,6 +8615,8 @@ public struct Nuts {
         /**
          * Supported currency units for melting
          */meltUnits: [CurrencyUnit]) {
+        self.nut04 = nut04
+        self.nut05 = nut05
         self.nut07Supported = nut07Supported
         self.nut08Supported = nut08Supported
         self.nut09Supported = nut09Supported
@@ -8269,6 +8637,12 @@ extension Nuts: Sendable {}
 
 extension Nuts: Equatable, Hashable {
     public static func ==(lhs: Nuts, rhs: Nuts) -> Bool {
+        if lhs.nut04 != rhs.nut04 {
+            return false
+        }
+        if lhs.nut05 != rhs.nut05 {
+            return false
+        }
         if lhs.nut07Supported != rhs.nut07Supported {
             return false
         }
@@ -8303,6 +8677,8 @@ extension Nuts: Equatable, Hashable {
     }
 
     public func hash(into hasher: inout Hasher) {
+        hasher.combine(nut04)
+        hasher.combine(nut05)
         hasher.combine(nut07Supported)
         hasher.combine(nut08Supported)
         hasher.combine(nut09Supported)
@@ -8325,6 +8701,8 @@ public struct FfiConverterTypeNuts: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Nuts {
         return
             try Nuts(
+                nut04: FfiConverterTypeNut04Settings.read(from: &buf), 
+                nut05: FfiConverterTypeNut05Settings.read(from: &buf), 
                 nut07Supported: FfiConverterBool.read(from: &buf), 
                 nut08Supported: FfiConverterBool.read(from: &buf), 
                 nut09Supported: FfiConverterBool.read(from: &buf), 
@@ -8339,6 +8717,8 @@ public struct FfiConverterTypeNuts: FfiConverterRustBuffer {
     }
 
     public static func write(_ value: Nuts, into buf: inout [UInt8]) {
+        FfiConverterTypeNut04Settings.write(value.nut04, into: &buf)
+        FfiConverterTypeNut05Settings.write(value.nut05, into: &buf)
         FfiConverterBool.write(value.nut07Supported, into: &buf)
         FfiConverterBool.write(value.nut08Supported, into: &buf)
         FfiConverterBool.write(value.nut09Supported, into: &buf)
@@ -11353,6 +11733,30 @@ fileprivate struct FfiConverterOptionUInt64: FfiConverterRustBuffer {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterOptionBool: FfiConverterRustBuffer {
+    typealias SwiftType = Bool?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterBool.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterBool.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterOptionString: FfiConverterRustBuffer {
     typealias SwiftType = String?
 
@@ -12128,6 +12532,31 @@ fileprivate struct FfiConverterSequenceTypeKeySetInfo: FfiConverterRustBuffer {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypeMeltMethodSettings: FfiConverterRustBuffer {
+    typealias SwiftType = [MeltMethodSettings]
+
+    public static func write(_ value: [MeltMethodSettings], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeMeltMethodSettings.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [MeltMethodSettings] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [MeltMethodSettings]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeMeltMethodSettings.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceTypeMeltQuote: FfiConverterRustBuffer {
     typealias SwiftType = [MeltQuote]
 
@@ -12145,6 +12574,31 @@ fileprivate struct FfiConverterSequenceTypeMeltQuote: FfiConverterRustBuffer {
         seq.reserveCapacity(Int(len))
         for _ in 0 ..< len {
             seq.append(try FfiConverterTypeMeltQuote.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeMintMethodSettings: FfiConverterRustBuffer {
+    typealias SwiftType = [MintMethodSettings]
+
+    public static func write(_ value: [MintMethodSettings], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeMintMethodSettings.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [MintMethodSettings] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [MintMethodSettings]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeMintMethodSettings.read(from: &buf))
         }
         return seq
     }
