@@ -15476,7 +15476,7 @@ public enum FfiError: Swift.Error {
          */code: UInt32, 
         /**
          * Human-readable error message
-         */message: String
+         */errorMessage: String
     )
     /**
      * Internal/infrastructure error (no protocol error code)
@@ -15485,7 +15485,7 @@ public enum FfiError: Swift.Error {
     case Internal(
         /**
          * Human-readable error message
-         */message: String
+         */errorMessage: String
     )
 }
 
@@ -15505,10 +15505,10 @@ public struct FfiConverterTypeFfiError: FfiConverterRustBuffer {
         
         case 1: return .Cdk(
             code: try FfiConverterUInt32.read(from: &buf), 
-            message: try FfiConverterString.read(from: &buf)
+            errorMessage: try FfiConverterString.read(from: &buf)
             )
         case 2: return .Internal(
-            message: try FfiConverterString.read(from: &buf)
+            errorMessage: try FfiConverterString.read(from: &buf)
             )
 
          default: throw UniffiInternalError.unexpectedEnumCase
@@ -15522,15 +15522,15 @@ public struct FfiConverterTypeFfiError: FfiConverterRustBuffer {
 
         
         
-        case let .Cdk(code,message):
+        case let .Cdk(code,errorMessage):
             writeInt(&buf, Int32(1))
             FfiConverterUInt32.write(code, into: &buf)
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(errorMessage, into: &buf)
             
         
-        case let .Internal(message):
+        case let .Internal(errorMessage):
             writeInt(&buf, Int32(2))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(errorMessage, into: &buf)
             
         }
     }

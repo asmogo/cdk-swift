@@ -17,8 +17,8 @@ let package = Package(
     targets: [
         .binaryTarget(
             name: "cdkFFI",
-            url: "https://github.com/asmogo/cdk-swift/releases/download/v0.0.30/cdkFFI.xcframework.zip",
-            checksum: "64c07df0456b217bf3fd23d0589aff9cbaee81132a42ccd00ac6dadf7c0853cc"
+            url: "https://github.com/asmogo/cdk-swift/releases/download/v0.0.31/cdkFFI.xcframework.zip",
+            checksum: "7f87d64231a68a27c29ad64830ef3caf8ec4d58522327df2813da8b309f4fc85"
         ),
         .target(
             name: "CashuDevKit",
