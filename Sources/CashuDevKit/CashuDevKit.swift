@@ -1070,7 +1070,7 @@ public protocol MultiMintWalletProtocol: AnyObject, Sendable {
     /**
      * Restore wallets for a specific mint
      */
-    func restore(mintUrl: MintUrl) async throws  -> Amount
+    func restore(mintUrl: MintUrl) async throws  -> Restored
     
     /**
      * Restore mint list from Nostr relays
@@ -2178,7 +2178,7 @@ open func removeMint(mintUrl: MintUrl)async   {
     /**
      * Restore wallets for a specific mint
      */
-open func restore(mintUrl: MintUrl)async throws  -> Amount  {
+open func restore(mintUrl: MintUrl)async throws  -> Restored  {
     return
         try  await uniffiRustCallAsync(
             rustFutureFunc: {
@@ -2190,7 +2190,7 @@ open func restore(mintUrl: MintUrl)async throws  -> Amount  {
             pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
             completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
             freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterTypeAmount_lift,
+            liftFunc: FfiConverterTypeRestored_lift,
             errorHandler: FfiConverterTypeFfiError_lift
         )
 }
@@ -2696,6 +2696,250 @@ public func FfiConverterTypeNostrWaitInfo_lower(_ value: NostrWaitInfo) -> Unsaf
 
 
 /**
+ * FFI-compatible NpubCash client
+ *
+ * This client provides access to the NpubCash API for fetching quotes
+ * and managing user settings.
+ */
+public protocol NpubCashClientProtocol: AnyObject, Sendable {
+    
+    /**
+     * Fetch quotes from NpubCash
+     *
+     * # Arguments
+     *
+     * * `since` - Optional Unix timestamp to fetch quotes from. If `None`, fetches all quotes.
+     *
+     * # Returns
+     *
+     * A list of quotes from the NpubCash service. The client automatically handles
+     * pagination to fetch all available quotes.
+     *
+     * # Errors
+     *
+     * Returns an error if the API request fails or authentication fails
+     */
+    func getQuotes(since: UInt64?) async throws  -> [NpubCashQuote]
+    
+    /**
+     * Set the mint URL for the user on the NpubCash server
+     *
+     * Updates the default mint URL used by the NpubCash server when creating quotes.
+     *
+     * # Arguments
+     *
+     * * `mint_url` - URL of the Cashu mint to use (e.g., "https://mint.example.com")
+     *
+     * # Errors
+     *
+     * Returns an error if the API request fails or authentication fails
+     */
+    func setMintUrl(mintUrl: String) async throws  -> NpubCashUserResponse
+    
+}
+/**
+ * FFI-compatible NpubCash client
+ *
+ * This client provides access to the NpubCash API for fetching quotes
+ * and managing user settings.
+ */
+open class NpubCashClient: NpubCashClientProtocol, @unchecked Sendable {
+    fileprivate let pointer: UnsafeMutableRawPointer!
+
+    /// Used to instantiate a [FFIObject] without an actual pointer, for fakes in tests, mostly.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public struct NoPointer {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    required public init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
+        self.pointer = pointer
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noPointer: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing [Pointer] the FFI lower functions will crash.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public init(noPointer: NoPointer) {
+        self.pointer = nil
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public func uniffiClonePointer() -> UnsafeMutableRawPointer {
+        return try! rustCall { uniffi_cdk_ffi_fn_clone_npubcashclient(self.pointer, $0) }
+    }
+    /**
+     * Create a new NpubCash client
+     *
+     * # Arguments
+     *
+     * * `base_url` - Base URL of the NpubCash service (e.g., "https://npub.cash")
+     * * `nostr_secret_key` - Nostr secret key for authentication. Accepts either:
+     * - Hex-encoded secret key (64 characters)
+     * - Bech32 `nsec` format (e.g., "nsec1...")
+     *
+     * # Errors
+     *
+     * Returns an error if the secret key is invalid or cannot be parsed
+     */
+public convenience init(baseUrl: String, nostrSecretKey: String)throws  {
+    let pointer =
+        try rustCallWithError(FfiConverterTypeFfiError_lift) {
+    uniffi_cdk_ffi_fn_constructor_npubcashclient_new(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(nostrSecretKey),$0
+    )
+}
+    self.init(unsafeFromRawPointer: pointer)
+}
+
+    deinit {
+        guard let pointer = pointer else {
+            return
+        }
+
+        try! rustCall { uniffi_cdk_ffi_fn_free_npubcashclient(pointer, $0) }
+    }
+
+    
+
+    
+    /**
+     * Fetch quotes from NpubCash
+     *
+     * # Arguments
+     *
+     * * `since` - Optional Unix timestamp to fetch quotes from. If `None`, fetches all quotes.
+     *
+     * # Returns
+     *
+     * A list of quotes from the NpubCash service. The client automatically handles
+     * pagination to fetch all available quotes.
+     *
+     * # Errors
+     *
+     * Returns an error if the API request fails or authentication fails
+     */
+open func getQuotes(since: UInt64?)async throws  -> [NpubCashQuote]  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_npubcashclient_get_quotes(
+                    self.uniffiClonePointer(),
+                    FfiConverterOptionUInt64.lower(since)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterSequenceTypeNpubCashQuote.lift,
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+    /**
+     * Set the mint URL for the user on the NpubCash server
+     *
+     * Updates the default mint URL used by the NpubCash server when creating quotes.
+     *
+     * # Arguments
+     *
+     * * `mint_url` - URL of the Cashu mint to use (e.g., "https://mint.example.com")
+     *
+     * # Errors
+     *
+     * Returns an error if the API request fails or authentication fails
+     */
+open func setMintUrl(mintUrl: String)async throws  -> NpubCashUserResponse  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_npubcashclient_set_mint_url(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(mintUrl)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeNpubCashUserResponse_lift,
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeNpubCashClient: FfiConverter {
+
+    typealias FfiType = UnsafeMutableRawPointer
+    typealias SwiftType = NpubCashClient
+
+    public static func lift(_ pointer: UnsafeMutableRawPointer) throws -> NpubCashClient {
+        return NpubCashClient(unsafeFromRawPointer: pointer)
+    }
+
+    public static func lower(_ value: NpubCashClient) -> UnsafeMutableRawPointer {
+        return value.uniffiClonePointer()
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> NpubCashClient {
+        let v: UInt64 = try readInt(&buf)
+        // The Rust code won't compile if a pointer won't fit in a UInt64.
+        // We have to go via `UInt` because that's the thing that's the size of a pointer.
+        let ptr = UnsafeMutableRawPointer(bitPattern: UInt(truncatingIfNeeded: v))
+        if (ptr == nil) {
+            throw UniffiInternalError.unexpectedNullPointer
+        }
+        return try lift(ptr!)
+    }
+
+    public static func write(_ value: NpubCashClient, into buf: inout [UInt8]) {
+        // This fiddling is because `Int` is the thing that's the same size as a pointer.
+        // The Rust code won't compile if a pointer won't fit in a `UInt64`.
+        writeInt(&buf, UInt64(bitPattern: Int64(Int(bitPattern: lower(value)))))
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeNpubCashClient_lift(_ pointer: UnsafeMutableRawPointer) throws -> NpubCashClient {
+    return try FfiConverterTypeNpubCashClient.lift(pointer)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeNpubCashClient_lower(_ value: NpubCashClient) -> UnsafeMutableRawPointer {
+    return FfiConverterTypeNpubCashClient.lower(value)
+}
+
+
+
+
+
+
+/**
  * NUT-18 Payment Request
  *
  * A payment request that can be shared to request Cashu tokens.
@@ -2944,6 +3188,215 @@ public func FfiConverterTypePaymentRequest_lift(_ pointer: UnsafeMutableRawPoint
 #endif
 public func FfiConverterTypePaymentRequest_lower(_ value: PaymentRequest) -> UnsafeMutableRawPointer {
     return FfiConverterTypePaymentRequest.lower(value)
+}
+
+
+
+
+
+
+/**
+ * Payment Request Payload
+ *
+ * Sent over Nostr or other transports.
+ */
+public protocol PaymentRequestPayloadProtocol: AnyObject, Sendable {
+    
+    /**
+     * Get the ID
+     */
+    func id()  -> String?
+    
+    /**
+     * Get the memo
+     */
+    func memo()  -> String?
+    
+    /**
+     * Get the mint URL
+     */
+    func mint()  -> MintUrl
+    
+    /**
+     * Get the proofs
+     */
+    func proofs()  -> [Proof]
+    
+    /**
+     * Get the currency unit
+     */
+    func unit()  -> CurrencyUnit
+    
+}
+/**
+ * Payment Request Payload
+ *
+ * Sent over Nostr or other transports.
+ */
+open class PaymentRequestPayload: PaymentRequestPayloadProtocol, @unchecked Sendable {
+    fileprivate let pointer: UnsafeMutableRawPointer!
+
+    /// Used to instantiate a [FFIObject] without an actual pointer, for fakes in tests, mostly.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public struct NoPointer {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    required public init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
+        self.pointer = pointer
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noPointer: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing [Pointer] the FFI lower functions will crash.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public init(noPointer: NoPointer) {
+        self.pointer = nil
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public func uniffiClonePointer() -> UnsafeMutableRawPointer {
+        return try! rustCall { uniffi_cdk_ffi_fn_clone_paymentrequestpayload(self.pointer, $0) }
+    }
+    // No primary constructor declared for this class.
+
+    deinit {
+        guard let pointer = pointer else {
+            return
+        }
+
+        try! rustCall { uniffi_cdk_ffi_fn_free_paymentrequestpayload(pointer, $0) }
+    }
+
+    
+    /**
+     * Decode PaymentRequestPayload from JSON string
+     */
+public static func fromString(json: String)throws  -> PaymentRequestPayload  {
+    return try  FfiConverterTypePaymentRequestPayload_lift(try rustCallWithError(FfiConverterTypeFfiError_lift) {
+    uniffi_cdk_ffi_fn_constructor_paymentrequestpayload_from_string(
+        FfiConverterString.lower(json),$0
+    )
+})
+}
+    
+
+    
+    /**
+     * Get the ID
+     */
+open func id() -> String?  {
+    return try!  FfiConverterOptionString.lift(try! rustCall() {
+    uniffi_cdk_ffi_fn_method_paymentrequestpayload_id(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+    /**
+     * Get the memo
+     */
+open func memo() -> String?  {
+    return try!  FfiConverterOptionString.lift(try! rustCall() {
+    uniffi_cdk_ffi_fn_method_paymentrequestpayload_memo(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+    /**
+     * Get the mint URL
+     */
+open func mint() -> MintUrl  {
+    return try!  FfiConverterTypeMintUrl_lift(try! rustCall() {
+    uniffi_cdk_ffi_fn_method_paymentrequestpayload_mint(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+    /**
+     * Get the proofs
+     */
+open func proofs() -> [Proof]  {
+    return try!  FfiConverterSequenceTypeProof.lift(try! rustCall() {
+    uniffi_cdk_ffi_fn_method_paymentrequestpayload_proofs(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+    /**
+     * Get the currency unit
+     */
+open func unit() -> CurrencyUnit  {
+    return try!  FfiConverterTypeCurrencyUnit_lift(try! rustCall() {
+    uniffi_cdk_ffi_fn_method_paymentrequestpayload_unit(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypePaymentRequestPayload: FfiConverter {
+
+    typealias FfiType = UnsafeMutableRawPointer
+    typealias SwiftType = PaymentRequestPayload
+
+    public static func lift(_ pointer: UnsafeMutableRawPointer) throws -> PaymentRequestPayload {
+        return PaymentRequestPayload(unsafeFromRawPointer: pointer)
+    }
+
+    public static func lower(_ value: PaymentRequestPayload) -> UnsafeMutableRawPointer {
+        return value.uniffiClonePointer()
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PaymentRequestPayload {
+        let v: UInt64 = try readInt(&buf)
+        // The Rust code won't compile if a pointer won't fit in a UInt64.
+        // We have to go via `UInt` because that's the thing that's the size of a pointer.
+        let ptr = UnsafeMutableRawPointer(bitPattern: UInt(truncatingIfNeeded: v))
+        if (ptr == nil) {
+            throw UniffiInternalError.unexpectedNullPointer
+        }
+        return try lift(ptr!)
+    }
+
+    public static func write(_ value: PaymentRequestPayload, into buf: inout [UInt8]) {
+        // This fiddling is because `Int` is the thing that's the same size as a pointer.
+        // The Rust code won't compile if a pointer won't fit in a `UInt64`.
+        writeInt(&buf, UInt64(bitPattern: Int64(Int(bitPattern: lower(value)))))
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePaymentRequestPayload_lift(_ pointer: UnsafeMutableRawPointer) throws -> PaymentRequestPayload {
+    return try FfiConverterTypePaymentRequestPayload.lift(pointer)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePaymentRequestPayload_lower(_ value: PaymentRequestPayload) -> UnsafeMutableRawPointer {
+    return FfiConverterTypePaymentRequestPayload.lower(value)
 }
 
 
@@ -3768,7 +4221,7 @@ public protocol WalletProtocol: AnyObject, Sendable {
     /**
      * Restore wallet from seed
      */
-    func restore() async throws  -> Amount
+    func restore() async throws  -> Restored
     
     /**
      * Revert a transaction
@@ -4663,7 +5116,7 @@ open func refreshKeysets()async throws  -> [KeySetInfo]  {
     /**
      * Restore wallet from seed
      */
-open func restore()async throws  -> Amount  {
+open func restore()async throws  -> Restored  {
     return
         try  await uniffiRustCallAsync(
             rustFutureFunc: {
@@ -4675,7 +5128,7 @@ open func restore()async throws  -> Amount  {
             pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
             completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
             freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterTypeAmount_lift,
+            liftFunc: FfiConverterTypeRestored_lift,
             errorHandler: FfiConverterTypeFfiError_lift
         )
 }
@@ -12741,6 +13194,320 @@ public func FfiConverterTypeMultiMintSendOptions_lower(_ value: MultiMintSendOpt
 
 
 /**
+ * A quote from the NpubCash service
+ */
+public struct NpubCashQuote {
+    /**
+     * Unique identifier for the quote
+     */
+    public let id: String
+    /**
+     * Amount in the specified unit
+     */
+    public let amount: UInt64
+    /**
+     * Currency or unit for the amount (e.g., "sat")
+     */
+    public let unit: String
+    /**
+     * Unix timestamp when the quote was created
+     */
+    public let createdAt: UInt64
+    /**
+     * Unix timestamp when the quote was paid (if paid)
+     */
+    public let paidAt: UInt64?
+    /**
+     * Unix timestamp when the quote expires
+     */
+    public let expiresAt: UInt64?
+    /**
+     * Mint URL associated with the quote
+     */
+    public let mintUrl: String?
+    /**
+     * Lightning invoice request
+     */
+    public let request: String?
+    /**
+     * Quote state (e.g., "PAID", "PENDING")
+     */
+    public let state: String?
+    /**
+     * Whether the quote is locked
+     */
+    public let locked: Bool?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Unique identifier for the quote
+         */id: String, 
+        /**
+         * Amount in the specified unit
+         */amount: UInt64, 
+        /**
+         * Currency or unit for the amount (e.g., "sat")
+         */unit: String, 
+        /**
+         * Unix timestamp when the quote was created
+         */createdAt: UInt64, 
+        /**
+         * Unix timestamp when the quote was paid (if paid)
+         */paidAt: UInt64?, 
+        /**
+         * Unix timestamp when the quote expires
+         */expiresAt: UInt64?, 
+        /**
+         * Mint URL associated with the quote
+         */mintUrl: String?, 
+        /**
+         * Lightning invoice request
+         */request: String?, 
+        /**
+         * Quote state (e.g., "PAID", "PENDING")
+         */state: String?, 
+        /**
+         * Whether the quote is locked
+         */locked: Bool?) {
+        self.id = id
+        self.amount = amount
+        self.unit = unit
+        self.createdAt = createdAt
+        self.paidAt = paidAt
+        self.expiresAt = expiresAt
+        self.mintUrl = mintUrl
+        self.request = request
+        self.state = state
+        self.locked = locked
+    }
+}
+
+#if compiler(>=6)
+extension NpubCashQuote: Sendable {}
+#endif
+
+
+extension NpubCashQuote: Equatable, Hashable {
+    public static func ==(lhs: NpubCashQuote, rhs: NpubCashQuote) -> Bool {
+        if lhs.id != rhs.id {
+            return false
+        }
+        if lhs.amount != rhs.amount {
+            return false
+        }
+        if lhs.unit != rhs.unit {
+            return false
+        }
+        if lhs.createdAt != rhs.createdAt {
+            return false
+        }
+        if lhs.paidAt != rhs.paidAt {
+            return false
+        }
+        if lhs.expiresAt != rhs.expiresAt {
+            return false
+        }
+        if lhs.mintUrl != rhs.mintUrl {
+            return false
+        }
+        if lhs.request != rhs.request {
+            return false
+        }
+        if lhs.state != rhs.state {
+            return false
+        }
+        if lhs.locked != rhs.locked {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(amount)
+        hasher.combine(unit)
+        hasher.combine(createdAt)
+        hasher.combine(paidAt)
+        hasher.combine(expiresAt)
+        hasher.combine(mintUrl)
+        hasher.combine(request)
+        hasher.combine(state)
+        hasher.combine(locked)
+    }
+}
+
+extension NpubCashQuote: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeNpubCashQuote: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> NpubCashQuote {
+        return
+            try NpubCashQuote(
+                id: FfiConverterString.read(from: &buf), 
+                amount: FfiConverterUInt64.read(from: &buf), 
+                unit: FfiConverterString.read(from: &buf), 
+                createdAt: FfiConverterUInt64.read(from: &buf), 
+                paidAt: FfiConverterOptionUInt64.read(from: &buf), 
+                expiresAt: FfiConverterOptionUInt64.read(from: &buf), 
+                mintUrl: FfiConverterOptionString.read(from: &buf), 
+                request: FfiConverterOptionString.read(from: &buf), 
+                state: FfiConverterOptionString.read(from: &buf), 
+                locked: FfiConverterOptionBool.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: NpubCashQuote, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterUInt64.write(value.amount, into: &buf)
+        FfiConverterString.write(value.unit, into: &buf)
+        FfiConverterUInt64.write(value.createdAt, into: &buf)
+        FfiConverterOptionUInt64.write(value.paidAt, into: &buf)
+        FfiConverterOptionUInt64.write(value.expiresAt, into: &buf)
+        FfiConverterOptionString.write(value.mintUrl, into: &buf)
+        FfiConverterOptionString.write(value.request, into: &buf)
+        FfiConverterOptionString.write(value.state, into: &buf)
+        FfiConverterOptionBool.write(value.locked, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeNpubCashQuote_lift(_ buf: RustBuffer) throws -> NpubCashQuote {
+    return try FfiConverterTypeNpubCashQuote.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeNpubCashQuote_lower(_ value: NpubCashQuote) -> RustBuffer {
+    return FfiConverterTypeNpubCashQuote.lower(value)
+}
+
+
+/**
+ * Response from updating user settings on NpubCash
+ */
+public struct NpubCashUserResponse {
+    /**
+     * Whether the request resulted in an error
+     */
+    public let error: Bool
+    /**
+     * User's public key
+     */
+    public let pubkey: String
+    /**
+     * Configured mint URL
+     */
+    public let mintUrl: String?
+    /**
+     * Whether quotes are locked
+     */
+    public let lockQuote: Bool
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Whether the request resulted in an error
+         */error: Bool, 
+        /**
+         * User's public key
+         */pubkey: String, 
+        /**
+         * Configured mint URL
+         */mintUrl: String?, 
+        /**
+         * Whether quotes are locked
+         */lockQuote: Bool) {
+        self.error = error
+        self.pubkey = pubkey
+        self.mintUrl = mintUrl
+        self.lockQuote = lockQuote
+    }
+}
+
+#if compiler(>=6)
+extension NpubCashUserResponse: Sendable {}
+#endif
+
+
+extension NpubCashUserResponse: Equatable, Hashable {
+    public static func ==(lhs: NpubCashUserResponse, rhs: NpubCashUserResponse) -> Bool {
+        if lhs.error != rhs.error {
+            return false
+        }
+        if lhs.pubkey != rhs.pubkey {
+            return false
+        }
+        if lhs.mintUrl != rhs.mintUrl {
+            return false
+        }
+        if lhs.lockQuote != rhs.lockQuote {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(error)
+        hasher.combine(pubkey)
+        hasher.combine(mintUrl)
+        hasher.combine(lockQuote)
+    }
+}
+
+extension NpubCashUserResponse: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeNpubCashUserResponse: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> NpubCashUserResponse {
+        return
+            try NpubCashUserResponse(
+                error: FfiConverterBool.read(from: &buf), 
+                pubkey: FfiConverterString.read(from: &buf), 
+                mintUrl: FfiConverterOptionString.read(from: &buf), 
+                lockQuote: FfiConverterBool.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: NpubCashUserResponse, into buf: inout [UInt8]) {
+        FfiConverterBool.write(value.error, into: &buf)
+        FfiConverterString.write(value.pubkey, into: &buf)
+        FfiConverterOptionString.write(value.mintUrl, into: &buf)
+        FfiConverterBool.write(value.lockQuote, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeNpubCashUserResponse_lift(_ buf: RustBuffer) throws -> NpubCashUserResponse {
+    return try FfiConverterTypeNpubCashUserResponse.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeNpubCashUserResponse_lower(_ value: NpubCashUserResponse) -> RustBuffer {
+    return FfiConverterTypeNpubCashUserResponse.lower(value)
+}
+
+
+/**
  * FFI-compatible Nut04 Settings
  */
 public struct Nut04Settings {
@@ -14079,6 +14846,89 @@ public func FfiConverterTypeRestoreResult_lift(_ buf: RustBuffer) throws -> Rest
 #endif
 public func FfiConverterTypeRestoreResult_lower(_ value: RestoreResult) -> RustBuffer {
     return FfiConverterTypeRestoreResult.lower(value)
+}
+
+
+/**
+ * Restored Data
+ */
+public struct Restored {
+    public let spent: Amount
+    public let unspent: Amount
+    public let pending: Amount
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(spent: Amount, unspent: Amount, pending: Amount) {
+        self.spent = spent
+        self.unspent = unspent
+        self.pending = pending
+    }
+}
+
+#if compiler(>=6)
+extension Restored: Sendable {}
+#endif
+
+
+extension Restored: Equatable, Hashable {
+    public static func ==(lhs: Restored, rhs: Restored) -> Bool {
+        if lhs.spent != rhs.spent {
+            return false
+        }
+        if lhs.unspent != rhs.unspent {
+            return false
+        }
+        if lhs.pending != rhs.pending {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(spent)
+        hasher.combine(unspent)
+        hasher.combine(pending)
+    }
+}
+
+extension Restored: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeRestored: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Restored {
+        return
+            try Restored(
+                spent: FfiConverterTypeAmount.read(from: &buf), 
+                unspent: FfiConverterTypeAmount.read(from: &buf), 
+                pending: FfiConverterTypeAmount.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: Restored, into buf: inout [UInt8]) {
+        FfiConverterTypeAmount.write(value.spent, into: &buf)
+        FfiConverterTypeAmount.write(value.unspent, into: &buf)
+        FfiConverterTypeAmount.write(value.pending, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeRestored_lift(_ buf: RustBuffer) throws -> Restored {
+    return try FfiConverterTypeRestored.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeRestored_lower(_ value: Restored) -> RustBuffer {
+    return FfiConverterTypeRestored.lower(value)
 }
 
 
@@ -18123,6 +18973,31 @@ fileprivate struct FfiConverterSequenceTypeMintUrl: FfiConverterRustBuffer {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypeNpubCashQuote: FfiConverterRustBuffer {
+    typealias SwiftType = [NpubCashQuote]
+
+    public static func write(_ value: [NpubCashQuote], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeNpubCashQuote.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [NpubCashQuote] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [NpubCashQuote]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeNpubCashQuote.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceTypeProof: FfiConverterRustBuffer {
     typealias SwiftType = [Proof]
 
@@ -19222,6 +20097,77 @@ public func mnemonicToEntropy(mnemonic: String)throws  -> Data  {
 })
 }
 /**
+ * Derive Nostr keys from a wallet seed
+ *
+ * This function derives the same Nostr keys that a wallet would use for NpubCash
+ * authentication. It takes the first 32 bytes of the seed as the secret key.
+ *
+ * # Arguments
+ *
+ * * `seed` - The wallet seed bytes (must be at least 32 bytes)
+ *
+ * # Returns
+ *
+ * The hex-encoded Nostr secret key that can be used with `NpubCashClient::new()`
+ *
+ * # Errors
+ *
+ * Returns an error if the seed is too short or key derivation fails
+ */
+public func npubcashDeriveSecretKeyFromSeed(seed: Data)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeFfiError_lift) {
+    uniffi_cdk_ffi_fn_func_npubcash_derive_secret_key_from_seed(
+        FfiConverterData.lower(seed),$0
+    )
+})
+}
+/**
+ * Get the public key for a given Nostr secret key
+ *
+ * # Arguments
+ *
+ * * `nostr_secret_key` - Nostr secret key. Accepts either:
+ * - Hex-encoded secret key (64 characters)
+ * - Bech32 `nsec` format (e.g., "nsec1...")
+ *
+ * # Returns
+ *
+ * The hex-encoded public key
+ *
+ * # Errors
+ *
+ * Returns an error if the secret key is invalid
+ */
+public func npubcashGetPubkey(nostrSecretKey: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeFfiError_lift) {
+    uniffi_cdk_ffi_fn_func_npubcash_get_pubkey(
+        FfiConverterString.lower(nostrSecretKey),$0
+    )
+})
+}
+/**
+ * Convert a NpubCash quote to a wallet MintQuote
+ *
+ * This allows the quote to be used with the wallet's minting functions.
+ * Note that the resulting MintQuote will not have a secret key set,
+ * which may be required for locked quotes.
+ *
+ * # Arguments
+ *
+ * * `quote` - The NpubCash quote to convert
+ *
+ * # Returns
+ *
+ * A MintQuote that can be used with wallet minting functions
+ */
+public func npubcashQuoteToMintQuote(quote: NpubCashQuote) -> MintQuote  {
+    return try!  FfiConverterTypeMintQuote_lift(try! rustCall() {
+    uniffi_cdk_ffi_fn_func_npubcash_quote_to_mint_quote(
+        FfiConverterTypeNpubCashQuote_lower(quote),$0
+    )
+})
+}
+/**
  * Check if proof has DLEQ proof
  */
 public func proofHasDleq(proof: Proof) -> Bool  {
@@ -19465,6 +20411,15 @@ private let initializationResult: InitializationResult = {
     if (uniffi_cdk_ffi_checksum_func_mnemonic_to_entropy() != 58572) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_cdk_ffi_checksum_func_npubcash_derive_secret_key_from_seed() != 22494) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_func_npubcash_get_pubkey() != 28438) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_func_npubcash_quote_to_mint_quote() != 58675) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_cdk_ffi_checksum_func_proof_has_dleq() != 56072) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -19612,7 +20567,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_cdk_ffi_checksum_method_multimintwallet_remove_mint() != 2995) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_cdk_ffi_checksum_method_multimintwallet_restore() != 11050) {
+    if (uniffi_cdk_ffi_checksum_method_multimintwallet_restore() != 21218) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_method_multimintwallet_restore_mints() != 1988) {
@@ -19657,6 +20612,12 @@ private let initializationResult: InitializationResult = {
     if (uniffi_cdk_ffi_checksum_method_nostrwaitinfo_relays() != 40910) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_cdk_ffi_checksum_method_npubcashclient_get_quotes() != 64169) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_npubcashclient_set_mint_url() != 50774) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_cdk_ffi_checksum_method_paymentrequest_amount() != 17196) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -19679,6 +20640,21 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_method_paymentrequest_unit() != 31184) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_paymentrequestpayload_id() != 27515) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_paymentrequestpayload_memo() != 56685) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_paymentrequestpayload_mint() != 42962) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_paymentrequestpayload_proofs() != 56354) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_paymentrequestpayload_unit() != 9118) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_method_preparedsend_amount() != 62180) {
@@ -19843,7 +20819,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_cdk_ffi_checksum_method_wallet_refresh_keysets() != 60028) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_cdk_ffi_checksum_method_wallet_restore() != 48186) {
+    if (uniffi_cdk_ffi_checksum_method_wallet_restore() != 15985) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_method_wallet_revert_transaction() != 31115) {
@@ -20191,7 +21167,13 @@ private let initializationResult: InitializationResult = {
     if (uniffi_cdk_ffi_checksum_constructor_multimintwallet_new_with_proxy() != 52208) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_cdk_ffi_checksum_constructor_npubcashclient_new() != 22894) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_cdk_ffi_checksum_constructor_paymentrequest_from_string() != 4890) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_constructor_paymentrequestpayload_from_string() != 31548) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_constructor_token_decode() != 17843) {
