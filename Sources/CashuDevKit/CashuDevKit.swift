@@ -844,6 +844,23 @@ public protocol MultiMintWalletProtocol: AnyObject, Sendable {
     func fetchMintInfo(mintUrl: MintUrl) async throws  -> MintInfo?
     
     /**
+     * Fetch a mint quote from the mint and store it locally
+     *
+     * This method contacts the mint to get the current state of a quote,
+     * creates or updates the quote in local storage, and returns the stored quote.
+     *
+     * Works with all payment methods (Bolt11, Bolt12, and custom payment methods).
+     *
+     * # Arguments
+     * * `mint_url` - The URL of the mint
+     * * `quote_id` - The ID of the quote to fetch
+     * * `payment_method` - The payment method for the quote. Required if the quote
+     * is not already stored locally. If the quote exists locally, the stored
+     * payment method will be used and this parameter is ignored.
+     */
+    func fetchMintQuote(mintUrl: MintUrl, quoteId: String, paymentMethod: PaymentMethod?) async throws  -> MintQuote
+    
+    /**
      * Get mint info for all wallets
      *
      * This method loads the mint info for each wallet in the MultiMintWallet
@@ -1537,6 +1554,38 @@ open func fetchMintInfo(mintUrl: MintUrl)async throws  -> MintInfo?  {
             completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
             freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
             liftFunc: FfiConverterOptionTypeMintInfo.lift,
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+    /**
+     * Fetch a mint quote from the mint and store it locally
+     *
+     * This method contacts the mint to get the current state of a quote,
+     * creates or updates the quote in local storage, and returns the stored quote.
+     *
+     * Works with all payment methods (Bolt11, Bolt12, and custom payment methods).
+     *
+     * # Arguments
+     * * `mint_url` - The URL of the mint
+     * * `quote_id` - The ID of the quote to fetch
+     * * `payment_method` - The payment method for the quote. Required if the quote
+     * is not already stored locally. If the quote exists locally, the stored
+     * payment method will be used and this parameter is ignored.
+     */
+open func fetchMintQuote(mintUrl: MintUrl, quoteId: String, paymentMethod: PaymentMethod?)async throws  -> MintQuote  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_multimintwallet_fetch_mint_quote(
+                    self.uniffiClonePointer(),
+                    FfiConverterTypeMintUrl_lower(mintUrl),FfiConverterString.lower(quoteId),FfiConverterOptionTypePaymentMethod.lower(paymentMethod)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeMintQuote_lift,
             errorHandler: FfiConverterTypeFfiError_lift
         )
 }
@@ -4007,6 +4056,19 @@ public protocol WalletProtocol: AnyObject, Sendable {
     func fetchMintInfo() async throws  -> MintInfo?
     
     /**
+     * Fetch a mint quote from the mint and store it locally
+     *
+     * Works with all payment methods (Bolt11, Bolt12, and custom payment methods).
+     *
+     * # Arguments
+     * * `quote_id` - The ID of the quote to fetch
+     * * `payment_method` - The payment method for the quote. Required if the quote
+     * is not already stored locally. If the quote exists locally, the stored
+     * payment method will be used and this parameter is ignored.
+     */
+    func fetchMintQuote(quoteId: String, paymentMethod: PaymentMethod?) async throws  -> MintQuote
+    
+    /**
      * Get the active keyset for the wallet's unit
      */
     func getActiveKeyset() async throws  -> KeySetInfo
@@ -4442,6 +4504,34 @@ open func fetchMintInfo()async throws  -> MintInfo?  {
             completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
             freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
             liftFunc: FfiConverterOptionTypeMintInfo.lift,
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+    /**
+     * Fetch a mint quote from the mint and store it locally
+     *
+     * Works with all payment methods (Bolt11, Bolt12, and custom payment methods).
+     *
+     * # Arguments
+     * * `quote_id` - The ID of the quote to fetch
+     * * `payment_method` - The payment method for the quote. Required if the quote
+     * is not already stored locally. If the quote exists locally, the stored
+     * payment method will be used and this parameter is ignored.
+     */
+open func fetchMintQuote(quoteId: String, paymentMethod: PaymentMethod?)async throws  -> MintQuote  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_wallet_fetch_mint_quote(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(quoteId),FfiConverterOptionTypePaymentMethod.lower(paymentMethod)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeMintQuote_lift,
             errorHandler: FfiConverterTypeFfiError_lift
         )
 }
@@ -20486,6 +20576,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_cdk_ffi_checksum_method_multimintwallet_fetch_mint_info() != 30024) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_cdk_ffi_checksum_method_multimintwallet_fetch_mint_quote() != 8316) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_cdk_ffi_checksum_method_multimintwallet_get_all_mint_info() != 31926) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -20724,6 +20817,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_method_wallet_fetch_mint_info() != 41951) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_wallet_fetch_mint_quote() != 45745) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_method_wallet_get_active_keyset() != 55608) {
