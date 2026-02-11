@@ -1588,7 +1588,408 @@ public func FfiConverterTypePaymentRequestPayload_lower(_ value: PaymentRequestP
 
 
 /**
+ * FFI-compatible PreparedMelt
+ *
+ * This wraps the data from a prepared melt operation along with a reference
+ * to the wallet. The actual PreparedMelt<'a> from cdk has a lifetime parameter
+ * that doesn't work with FFI, so we store the wallet and cached data separately.
+ */
+public protocol PreparedMeltProtocol: AnyObject, Sendable {
+    
+    /**
+     * Get the amount to be melted
+     */
+    func amount()  -> Amount
+    
+    /**
+     * Cancel the prepared melt and release reserved proofs
+     */
+    func cancel() async throws 
+    
+    /**
+     * Get the expected change amount if swap is skipped
+     */
+    func changeAmountWithoutSwap()  -> Amount
+    
+    /**
+     * Confirm the prepared melt and execute the payment
+     */
+    func confirm() async throws  -> FinalizedMelt
+    
+    /**
+     * Confirm the prepared melt with custom options
+     */
+    func confirmWithOptions(options: MeltConfirmOptions) async throws  -> FinalizedMelt
+    
+    /**
+     * Get the fee reserve from the quote
+     */
+    func feeReserve()  -> Amount
+    
+    /**
+     * Get the fee savings from skipping the swap
+     */
+    func feeSavingsWithoutSwap()  -> Amount
+    
+    /**
+     * Get the input fee
+     */
+    func inputFee()  -> Amount
+    
+    /**
+     * Get the input fee if swap is skipped (fee on all proofs sent directly)
+     */
+    func inputFeeWithoutSwap()  -> Amount
+    
+    /**
+     * Get the operation ID for this prepared melt
+     */
+    func operationId()  -> String
+    
+    /**
+     * Get the proofs that will be used
+     */
+    func proofs()  -> [Proof]
+    
+    /**
+     * Get the quote ID
+     */
+    func quoteId()  -> String
+    
+    /**
+     * Returns true if a swap would be performed (proofs_to_swap is not empty)
+     */
+    func requiresSwap()  -> Bool
+    
+    /**
+     * Get the swap fee
+     */
+    func swapFee()  -> Amount
+    
+    /**
+     * Get the total fee (swap fee + input fee)
+     */
+    func totalFee()  -> Amount
+    
+    /**
+     * Get the total fee if swap is performed (current default behavior)
+     */
+    func totalFeeWithSwap()  -> Amount
+    
+}
+/**
+ * FFI-compatible PreparedMelt
+ *
+ * This wraps the data from a prepared melt operation along with a reference
+ * to the wallet. The actual PreparedMelt<'a> from cdk has a lifetime parameter
+ * that doesn't work with FFI, so we store the wallet and cached data separately.
+ */
+open class PreparedMelt: PreparedMeltProtocol, @unchecked Sendable {
+    fileprivate let pointer: UnsafeMutableRawPointer!
+
+    /// Used to instantiate a [FFIObject] without an actual pointer, for fakes in tests, mostly.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public struct NoPointer {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    required public init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
+        self.pointer = pointer
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noPointer: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing [Pointer] the FFI lower functions will crash.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public init(noPointer: NoPointer) {
+        self.pointer = nil
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public func uniffiClonePointer() -> UnsafeMutableRawPointer {
+        return try! rustCall { uniffi_cdk_ffi_fn_clone_preparedmelt(self.pointer, $0) }
+    }
+    // No primary constructor declared for this class.
+
+    deinit {
+        guard let pointer = pointer else {
+            return
+        }
+
+        try! rustCall { uniffi_cdk_ffi_fn_free_preparedmelt(pointer, $0) }
+    }
+
+    
+
+    
+    /**
+     * Get the amount to be melted
+     */
+open func amount() -> Amount  {
+    return try!  FfiConverterTypeAmount_lift(try! rustCall() {
+    uniffi_cdk_ffi_fn_method_preparedmelt_amount(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+    /**
+     * Cancel the prepared melt and release reserved proofs
+     */
+open func cancel()async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_preparedmelt_cancel(
+                    self.uniffiClonePointer()
+                    
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_void,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_void,
+            freeFunc: ffi_cdk_ffi_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+    /**
+     * Get the expected change amount if swap is skipped
+     */
+open func changeAmountWithoutSwap() -> Amount  {
+    return try!  FfiConverterTypeAmount_lift(try! rustCall() {
+    uniffi_cdk_ffi_fn_method_preparedmelt_change_amount_without_swap(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+    /**
+     * Confirm the prepared melt and execute the payment
+     */
+open func confirm()async throws  -> FinalizedMelt  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_preparedmelt_confirm(
+                    self.uniffiClonePointer()
+                    
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeFinalizedMelt_lift,
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+    /**
+     * Confirm the prepared melt with custom options
+     */
+open func confirmWithOptions(options: MeltConfirmOptions)async throws  -> FinalizedMelt  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_preparedmelt_confirm_with_options(
+                    self.uniffiClonePointer(),
+                    FfiConverterTypeMeltConfirmOptions_lower(options)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeFinalizedMelt_lift,
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+    /**
+     * Get the fee reserve from the quote
+     */
+open func feeReserve() -> Amount  {
+    return try!  FfiConverterTypeAmount_lift(try! rustCall() {
+    uniffi_cdk_ffi_fn_method_preparedmelt_fee_reserve(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+    /**
+     * Get the fee savings from skipping the swap
+     */
+open func feeSavingsWithoutSwap() -> Amount  {
+    return try!  FfiConverterTypeAmount_lift(try! rustCall() {
+    uniffi_cdk_ffi_fn_method_preparedmelt_fee_savings_without_swap(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+    /**
+     * Get the input fee
+     */
+open func inputFee() -> Amount  {
+    return try!  FfiConverterTypeAmount_lift(try! rustCall() {
+    uniffi_cdk_ffi_fn_method_preparedmelt_input_fee(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+    /**
+     * Get the input fee if swap is skipped (fee on all proofs sent directly)
+     */
+open func inputFeeWithoutSwap() -> Amount  {
+    return try!  FfiConverterTypeAmount_lift(try! rustCall() {
+    uniffi_cdk_ffi_fn_method_preparedmelt_input_fee_without_swap(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+    /**
+     * Get the operation ID for this prepared melt
+     */
+open func operationId() -> String  {
+    return try!  FfiConverterString.lift(try! rustCall() {
+    uniffi_cdk_ffi_fn_method_preparedmelt_operation_id(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+    /**
+     * Get the proofs that will be used
+     */
+open func proofs() -> [Proof]  {
+    return try!  FfiConverterSequenceTypeProof.lift(try! rustCall() {
+    uniffi_cdk_ffi_fn_method_preparedmelt_proofs(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+    /**
+     * Get the quote ID
+     */
+open func quoteId() -> String  {
+    return try!  FfiConverterString.lift(try! rustCall() {
+    uniffi_cdk_ffi_fn_method_preparedmelt_quote_id(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+    /**
+     * Returns true if a swap would be performed (proofs_to_swap is not empty)
+     */
+open func requiresSwap() -> Bool  {
+    return try!  FfiConverterBool.lift(try! rustCall() {
+    uniffi_cdk_ffi_fn_method_preparedmelt_requires_swap(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+    /**
+     * Get the swap fee
+     */
+open func swapFee() -> Amount  {
+    return try!  FfiConverterTypeAmount_lift(try! rustCall() {
+    uniffi_cdk_ffi_fn_method_preparedmelt_swap_fee(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+    /**
+     * Get the total fee (swap fee + input fee)
+     */
+open func totalFee() -> Amount  {
+    return try!  FfiConverterTypeAmount_lift(try! rustCall() {
+    uniffi_cdk_ffi_fn_method_preparedmelt_total_fee(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+    /**
+     * Get the total fee if swap is performed (current default behavior)
+     */
+open func totalFeeWithSwap() -> Amount  {
+    return try!  FfiConverterTypeAmount_lift(try! rustCall() {
+    uniffi_cdk_ffi_fn_method_preparedmelt_total_fee_with_swap(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
+
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypePreparedMelt: FfiConverter {
+
+    typealias FfiType = UnsafeMutableRawPointer
+    typealias SwiftType = PreparedMelt
+
+    public static func lift(_ pointer: UnsafeMutableRawPointer) throws -> PreparedMelt {
+        return PreparedMelt(unsafeFromRawPointer: pointer)
+    }
+
+    public static func lower(_ value: PreparedMelt) -> UnsafeMutableRawPointer {
+        return value.uniffiClonePointer()
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PreparedMelt {
+        let v: UInt64 = try readInt(&buf)
+        // The Rust code won't compile if a pointer won't fit in a UInt64.
+        // We have to go via `UInt` because that's the thing that's the size of a pointer.
+        let ptr = UnsafeMutableRawPointer(bitPattern: UInt(truncatingIfNeeded: v))
+        if (ptr == nil) {
+            throw UniffiInternalError.unexpectedNullPointer
+        }
+        return try lift(ptr!)
+    }
+
+    public static func write(_ value: PreparedMelt, into buf: inout [UInt8]) {
+        // This fiddling is because `Int` is the thing that's the same size as a pointer.
+        // The Rust code won't compile if a pointer won't fit in a `UInt64`.
+        writeInt(&buf, UInt64(bitPattern: Int64(Int(bitPattern: lower(value)))))
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePreparedMelt_lift(_ pointer: UnsafeMutableRawPointer) throws -> PreparedMelt {
+    return try FfiConverterTypePreparedMelt.lift(pointer)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePreparedMelt_lower(_ value: PreparedMelt) -> UnsafeMutableRawPointer {
+    return FfiConverterTypePreparedMelt.lower(value)
+}
+
+
+
+
+
+
+/**
  * FFI-compatible PreparedSend
+ *
+ * This wraps the data from a prepared send operation along with a reference
+ * to the wallet. The actual PreparedSend<'a> from cdk has a lifetime parameter
+ * that doesn't work with FFI, so we store the wallet and cached data separately.
  */
 public protocol PreparedSendProtocol: AnyObject, Sendable {
     
@@ -1613,9 +2014,9 @@ public protocol PreparedSendProtocol: AnyObject, Sendable {
     func fee()  -> Amount
     
     /**
-     * Get the prepared send ID
+     * Get the operation ID for this prepared send
      */
-    func id()  -> String
+    func operationId()  -> String
     
     /**
      * Get the proofs that will be used
@@ -1625,6 +2026,10 @@ public protocol PreparedSendProtocol: AnyObject, Sendable {
 }
 /**
  * FFI-compatible PreparedSend
+ *
+ * This wraps the data from a prepared send operation along with a reference
+ * to the wallet. The actual PreparedSend<'a> from cdk has a lifetime parameter
+ * that doesn't work with FFI, so we store the wallet and cached data separately.
  */
 open class PreparedSend: PreparedSendProtocol, @unchecked Sendable {
     fileprivate let pointer: UnsafeMutableRawPointer!
@@ -1739,11 +2144,11 @@ open func fee() -> Amount  {
 }
     
     /**
-     * Get the prepared send ID
+     * Get the operation ID for this prepared send
      */
-open func id() -> String  {
+open func operationId() -> String  {
     return try!  FfiConverterString.lift(try! rustCall() {
-    uniffi_cdk_ffi_fn_method_preparedsend_id(self.uniffiClonePointer(),$0
+    uniffi_cdk_ffi_fn_method_preparedsend_operation_id(self.uniffiClonePointer(),$0
     )
 })
 }
@@ -2175,19 +2580,22 @@ public protocol WalletProtocol: AnyObject, Sendable {
     func calculateFee(proofCount: UInt32, keysetId: String) async throws  -> Amount
     
     /**
-     * Check all pending proofs and return the total amount reclaimed
+     * Check all pending proofs and return the total amount still pending
+     *
+     * This function checks orphaned pending proofs (not managed by active sagas)
+     * with the mint and marks spent proofs accordingly.
      */
     func checkAllPendingProofs() async throws  -> Amount
-    
-    /**
-     * Check a specific mint quote status
-     */
-    func checkMintQuote(quoteId: String) async throws  -> MintQuoteBolt11Response
     
     /**
      * Check if proofs are spent
      */
     func checkProofsSpent(proofs: [Proof]) async throws  -> [Bool]
+    
+    /**
+     * Check status of a pending send operation
+     */
+    func checkSendStatus(operationId: String) async throws  -> Bool
     
     /**
      * Get mint info from mint
@@ -2216,6 +2624,11 @@ public protocol WalletProtocol: AnyObject, Sendable {
      * Get fees for a specific keyset ID
      */
     func getKeysetFeesById(keysetId: String) async throws  -> UInt64
+    
+    /**
+     * Get all pending send operations
+     */
+    func getPendingSends() async throws  -> [String]
     
     /**
      * Get proofs by states
@@ -2253,22 +2666,12 @@ public protocol WalletProtocol: AnyObject, Sendable {
     func loadMintInfo() async throws  -> MintInfo
     
     /**
-     * Melt tokens
-     */
-    func melt(quoteId: String) async throws  -> Melted
-    
-    /**
      * Get a quote for a BIP353 melt
      *
      * This method resolves a BIP353 address (e.g., "alice@example.com") to a Lightning offer
      * and then creates a melt quote for that offer.
      */
     func meltBip353Quote(bip353Address: String, amountMsat: Amount) async throws  -> MeltQuote
-    
-    /**
-     * Get a quote for a bolt12 melt
-     */
-    func meltBolt12Quote(request: String, options: MeltOptions?) async throws  -> MeltQuote
     
     /**
      * Get a quote for a human-readable address melt
@@ -2292,29 +2695,6 @@ public protocol WalletProtocol: AnyObject, Sendable {
     func meltLightningAddressQuote(lightningAddress: String, amountMsat: Amount) async throws  -> MeltQuote
     
     /**
-     * Melt specific proofs
-     *
-     * This method allows melting proofs that may not be in the wallet's database,
-     * similar to how `receive_proofs` handles external proofs. The proofs will be
-     * added to the database and used for the melt operation.
-     *
-     * # Arguments
-     *
-     * * `quote_id` - The melt quote ID (obtained from `melt_quote`)
-     * * `proofs` - The proofs to melt (can be external proofs not in the wallet's database)
-     *
-     * # Returns
-     *
-     * A `Melted` result containing the payment details and any change proofs
-     */
-    func meltProofs(quoteId: String, proofs: [Proof]) async throws  -> Melted
-    
-    /**
-     * Get a melt quote
-     */
-    func meltQuote(request: String, options: MeltOptions?) async throws  -> MeltQuote
-    
-    /**
      * Get a melt quote using a unified interface for any payment method
      *
      * This method supports bolt11, bolt12, and custom payment methods.
@@ -2327,7 +2707,7 @@ public protocol WalletProtocol: AnyObject, Sendable {
      * * `options` - Optional melt options (MPP, amountless, etc.)
      * * `extra` - Optional JSON string with extra payment-method-specific fields (for custom methods)
      */
-    func meltQuoteUnified(method: PaymentMethod, request: String, options: MeltOptions?, extra: String?) async throws  -> MeltQuote
+    func meltQuote(method: PaymentMethod, request: String, options: MeltOptions?, extra: String?) async throws  -> MeltQuote
     
     /**
      * Mint tokens
@@ -2340,36 +2720,11 @@ public protocol WalletProtocol: AnyObject, Sendable {
     func mintBlindAuth(amount: Amount) async throws  -> [Proof]
     
     /**
-     * Mint tokens using bolt12
-     */
-    func mintBolt12(quoteId: String, amount: Amount?, amountSplitTarget: SplitTarget, spendingConditions: SpendingConditions?) async throws  -> [Proof]
-    
-    /**
-     * Get a quote for a bolt12 mint
-     */
-    func mintBolt12Quote(amount: Amount?, description: String?) async throws  -> MintQuote
-    
-    /**
      * Get a mint quote
      */
-    func mintQuote(amount: Amount, description: String?) async throws  -> MintQuote
+    func mintQuote(paymentMethod: PaymentMethod, amount: Amount?, description: String?, extra: String?) async throws  -> MintQuote
     
-    /**
-     * Get a mint quote using a unified interface for any payment method
-     *
-     * This method supports bolt11, bolt12, and custom payment methods.
-     * For custom methods, you can pass extra JSON data that will be forwarded
-     * to the payment processor.
-     *
-     * # Arguments
-     * * `amount` - Optional amount to mint (required for bolt11)
-     * * `method` - Payment method to use (bolt11, bolt12, or custom)
-     * * `description` - Optional description for the quote
-     * * `extra` - Optional JSON string with extra payment-method-specific fields (for custom methods)
-     */
-    func mintQuoteUnified(amount: Amount?, method: PaymentMethod, description: String?, extra: String?) async throws  -> MintQuote
-    
-    func mintUnified(quoteId: String, amount: Amount?, amountSplitTarget: SplitTarget, spendingConditions: SpendingConditions?) async throws  -> [Proof]
+    func mintUnified(quoteId: String, amountSplitTarget: SplitTarget, spendingConditions: SpendingConditions?) async throws  -> [Proof]
     
     /**
      * Get the mint URL
@@ -2390,6 +2745,31 @@ public protocol WalletProtocol: AnyObject, Sendable {
     func payRequest(paymentRequest: PaymentRequest, customAmount: Amount?) async throws 
     
     /**
+     * Prepare a melt operation
+     *
+     * Returns a `PreparedMelt` that can be confirmed or cancelled.
+     */
+    func prepareMelt(quoteId: String) async throws  -> PreparedMelt
+    
+    /**
+     * Prepare a melt operation with specific proofs
+     *
+     * This method allows melting proofs that may not be in the wallet's database,
+     * similar to how `receive_proofs` handles external proofs. The proofs will be
+     * added to the database and used for the melt operation.
+     *
+     * # Arguments
+     *
+     * * `quote_id` - The melt quote ID (obtained from `melt_quote`)
+     * * `proofs` - The proofs to melt (can be external proofs not in the wallet's database)
+     *
+     * # Returns
+     *
+     * A `PreparedMelt` that can be confirmed or cancelled
+     */
+    func prepareMeltProofs(quoteId: String, proofs: [Proof]) async throws  -> PreparedMelt
+    
+    /**
      * Prepare a send operation
      */
     func prepareSend(amount: Amount, options: SendOptions) async throws  -> PreparedSend
@@ -2402,12 +2782,7 @@ public protocol WalletProtocol: AnyObject, Sendable {
     /**
      * Receive proofs directly
      */
-    func receiveProofs(proofs: [Proof], options: ReceiveOptions, memo: String?) async throws  -> Amount
-    
-    /**
-     * Reclaim unspent proofs (mark them as unspent in the database)
-     */
-    func reclaimUnspent(proofs: [Proof]) async throws 
+    func receiveProofs(proofs: [Proof], options: ReceiveOptions, memo: String?, token: String?) async throws  -> Amount
     
     /**
      * Refresh access token using the stored refresh token
@@ -2420,6 +2795,13 @@ public protocol WalletProtocol: AnyObject, Sendable {
     func refreshKeysets() async throws  -> [KeySetInfo]
     
     /**
+     * Refresh a specific mint quote status from the mint.
+     * Updates local store with current state from mint.
+     * Does NOT mint tokens - use mint() to mint a specific quote.
+     */
+    func refreshMintQuote(quoteId: String) async throws  -> MintQuoteBolt11Response
+    
+    /**
      * Restore wallet from seed
      */
     func restore() async throws  -> Restored
@@ -2428,6 +2810,11 @@ public protocol WalletProtocol: AnyObject, Sendable {
      * Revert a transaction
      */
     func revertTransaction(id: TransactionId) async throws 
+    
+    /**
+     * Revoke a pending send operation
+     */
+    func revokeSend(operationId: String) async throws  -> Amount
     
     /**
      * Set Clear Auth Token (CAT) for authentication
@@ -2588,7 +2975,10 @@ open func calculateFee(proofCount: UInt32, keysetId: String)async throws  -> Amo
 }
     
     /**
-     * Check all pending proofs and return the total amount reclaimed
+     * Check all pending proofs and return the total amount still pending
+     *
+     * This function checks orphaned pending proofs (not managed by active sagas)
+     * with the mint and marks spent proofs accordingly.
      */
 open func checkAllPendingProofs()async throws  -> Amount  {
     return
@@ -2603,26 +2993,6 @@ open func checkAllPendingProofs()async throws  -> Amount  {
             completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
             freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
             liftFunc: FfiConverterTypeAmount_lift,
-            errorHandler: FfiConverterTypeFfiError_lift
-        )
-}
-    
-    /**
-     * Check a specific mint quote status
-     */
-open func checkMintQuote(quoteId: String)async throws  -> MintQuoteBolt11Response  {
-    return
-        try  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_cdk_ffi_fn_method_wallet_check_mint_quote(
-                    self.uniffiClonePointer(),
-                    FfiConverterString.lower(quoteId)
-                )
-            },
-            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
-            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
-            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterTypeMintQuoteBolt11Response_lift,
             errorHandler: FfiConverterTypeFfiError_lift
         )
 }
@@ -2643,6 +3013,26 @@ open func checkProofsSpent(proofs: [Proof])async throws  -> [Bool]  {
             completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
             freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
             liftFunc: FfiConverterSequenceBool.lift,
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+    /**
+     * Check status of a pending send operation
+     */
+open func checkSendStatus(operationId: String)async throws  -> Bool  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_wallet_check_send_status(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(operationId)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_i8,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_i8,
+            freeFunc: ffi_cdk_ffi_rust_future_free_i8,
+            liftFunc: FfiConverterBool.lift,
             errorHandler: FfiConverterTypeFfiError_lift
         )
 }
@@ -2731,6 +3121,26 @@ open func getKeysetFeesById(keysetId: String)async throws  -> UInt64  {
             completeFunc: ffi_cdk_ffi_rust_future_complete_u64,
             freeFunc: ffi_cdk_ffi_rust_future_free_u64,
             liftFunc: FfiConverterUInt64.lift,
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+    /**
+     * Get all pending send operations
+     */
+open func getPendingSends()async throws  -> [String]  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_wallet_get_pending_sends(
+                    self.uniffiClonePointer()
+                    
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterSequenceString.lift,
             errorHandler: FfiConverterTypeFfiError_lift
         )
 }
@@ -2861,26 +3271,6 @@ open func loadMintInfo()async throws  -> MintInfo  {
 }
     
     /**
-     * Melt tokens
-     */
-open func melt(quoteId: String)async throws  -> Melted  {
-    return
-        try  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_cdk_ffi_fn_method_wallet_melt(
-                    self.uniffiClonePointer(),
-                    FfiConverterString.lower(quoteId)
-                )
-            },
-            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
-            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
-            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterTypeMelted_lift,
-            errorHandler: FfiConverterTypeFfiError_lift
-        )
-}
-    
-    /**
      * Get a quote for a BIP353 melt
      *
      * This method resolves a BIP353 address (e.g., "alice@example.com") to a Lightning offer
@@ -2893,26 +3283,6 @@ open func meltBip353Quote(bip353Address: String, amountMsat: Amount)async throws
                 uniffi_cdk_ffi_fn_method_wallet_melt_bip353_quote(
                     self.uniffiClonePointer(),
                     FfiConverterString.lower(bip353Address),FfiConverterTypeAmount_lower(amountMsat)
-                )
-            },
-            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
-            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
-            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterTypeMeltQuote_lift,
-            errorHandler: FfiConverterTypeFfiError_lift
-        )
-}
-    
-    /**
-     * Get a quote for a bolt12 melt
-     */
-open func meltBolt12Quote(request: String, options: MeltOptions?)async throws  -> MeltQuote  {
-    return
-        try  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_cdk_ffi_fn_method_wallet_melt_bolt12_quote(
-                    self.uniffiClonePointer(),
-                    FfiConverterString.lower(request),FfiConverterOptionTypeMeltOptions.lower(options)
                 )
             },
             pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
@@ -2975,59 +3345,6 @@ open func meltLightningAddressQuote(lightningAddress: String, amountMsat: Amount
 }
     
     /**
-     * Melt specific proofs
-     *
-     * This method allows melting proofs that may not be in the wallet's database,
-     * similar to how `receive_proofs` handles external proofs. The proofs will be
-     * added to the database and used for the melt operation.
-     *
-     * # Arguments
-     *
-     * * `quote_id` - The melt quote ID (obtained from `melt_quote`)
-     * * `proofs` - The proofs to melt (can be external proofs not in the wallet's database)
-     *
-     * # Returns
-     *
-     * A `Melted` result containing the payment details and any change proofs
-     */
-open func meltProofs(quoteId: String, proofs: [Proof])async throws  -> Melted  {
-    return
-        try  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_cdk_ffi_fn_method_wallet_melt_proofs(
-                    self.uniffiClonePointer(),
-                    FfiConverterString.lower(quoteId),FfiConverterSequenceTypeProof.lower(proofs)
-                )
-            },
-            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
-            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
-            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterTypeMelted_lift,
-            errorHandler: FfiConverterTypeFfiError_lift
-        )
-}
-    
-    /**
-     * Get a melt quote
-     */
-open func meltQuote(request: String, options: MeltOptions?)async throws  -> MeltQuote  {
-    return
-        try  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_cdk_ffi_fn_method_wallet_melt_quote(
-                    self.uniffiClonePointer(),
-                    FfiConverterString.lower(request),FfiConverterOptionTypeMeltOptions.lower(options)
-                )
-            },
-            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
-            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
-            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterTypeMeltQuote_lift,
-            errorHandler: FfiConverterTypeFfiError_lift
-        )
-}
-    
-    /**
      * Get a melt quote using a unified interface for any payment method
      *
      * This method supports bolt11, bolt12, and custom payment methods.
@@ -3040,11 +3357,11 @@ open func meltQuote(request: String, options: MeltOptions?)async throws  -> Melt
      * * `options` - Optional melt options (MPP, amountless, etc.)
      * * `extra` - Optional JSON string with extra payment-method-specific fields (for custom methods)
      */
-open func meltQuoteUnified(method: PaymentMethod, request: String, options: MeltOptions?, extra: String?)async throws  -> MeltQuote  {
+open func meltQuote(method: PaymentMethod, request: String, options: MeltOptions?, extra: String?)async throws  -> MeltQuote  {
     return
         try  await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_cdk_ffi_fn_method_wallet_melt_quote_unified(
+                uniffi_cdk_ffi_fn_method_wallet_melt_quote(
                     self.uniffiClonePointer(),
                     FfiConverterTypePaymentMethod_lower(method),FfiConverterString.lower(request),FfiConverterOptionTypeMeltOptions.lower(options),FfiConverterOptionString.lower(extra)
                 )
@@ -3098,55 +3415,15 @@ open func mintBlindAuth(amount: Amount)async throws  -> [Proof]  {
 }
     
     /**
-     * Mint tokens using bolt12
-     */
-open func mintBolt12(quoteId: String, amount: Amount?, amountSplitTarget: SplitTarget, spendingConditions: SpendingConditions?)async throws  -> [Proof]  {
-    return
-        try  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_cdk_ffi_fn_method_wallet_mint_bolt12(
-                    self.uniffiClonePointer(),
-                    FfiConverterString.lower(quoteId),FfiConverterOptionTypeAmount.lower(amount),FfiConverterTypeSplitTarget_lower(amountSplitTarget),FfiConverterOptionTypeSpendingConditions.lower(spendingConditions)
-                )
-            },
-            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
-            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
-            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterSequenceTypeProof.lift,
-            errorHandler: FfiConverterTypeFfiError_lift
-        )
-}
-    
-    /**
-     * Get a quote for a bolt12 mint
-     */
-open func mintBolt12Quote(amount: Amount?, description: String?)async throws  -> MintQuote  {
-    return
-        try  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_cdk_ffi_fn_method_wallet_mint_bolt12_quote(
-                    self.uniffiClonePointer(),
-                    FfiConverterOptionTypeAmount.lower(amount),FfiConverterOptionString.lower(description)
-                )
-            },
-            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
-            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
-            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterTypeMintQuote_lift,
-            errorHandler: FfiConverterTypeFfiError_lift
-        )
-}
-    
-    /**
      * Get a mint quote
      */
-open func mintQuote(amount: Amount, description: String?)async throws  -> MintQuote  {
+open func mintQuote(paymentMethod: PaymentMethod, amount: Amount?, description: String?, extra: String?)async throws  -> MintQuote  {
     return
         try  await uniffiRustCallAsync(
             rustFutureFunc: {
                 uniffi_cdk_ffi_fn_method_wallet_mint_quote(
                     self.uniffiClonePointer(),
-                    FfiConverterTypeAmount_lower(amount),FfiConverterOptionString.lower(description)
+                    FfiConverterTypePaymentMethod_lower(paymentMethod),FfiConverterOptionTypeAmount.lower(amount),FfiConverterOptionString.lower(description),FfiConverterOptionString.lower(extra)
                 )
             },
             pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
@@ -3157,43 +3434,13 @@ open func mintQuote(amount: Amount, description: String?)async throws  -> MintQu
         )
 }
     
-    /**
-     * Get a mint quote using a unified interface for any payment method
-     *
-     * This method supports bolt11, bolt12, and custom payment methods.
-     * For custom methods, you can pass extra JSON data that will be forwarded
-     * to the payment processor.
-     *
-     * # Arguments
-     * * `amount` - Optional amount to mint (required for bolt11)
-     * * `method` - Payment method to use (bolt11, bolt12, or custom)
-     * * `description` - Optional description for the quote
-     * * `extra` - Optional JSON string with extra payment-method-specific fields (for custom methods)
-     */
-open func mintQuoteUnified(amount: Amount?, method: PaymentMethod, description: String?, extra: String?)async throws  -> MintQuote  {
-    return
-        try  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_cdk_ffi_fn_method_wallet_mint_quote_unified(
-                    self.uniffiClonePointer(),
-                    FfiConverterOptionTypeAmount.lower(amount),FfiConverterTypePaymentMethod_lower(method),FfiConverterOptionString.lower(description),FfiConverterOptionString.lower(extra)
-                )
-            },
-            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
-            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
-            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterTypeMintQuote_lift,
-            errorHandler: FfiConverterTypeFfiError_lift
-        )
-}
-    
-open func mintUnified(quoteId: String, amount: Amount?, amountSplitTarget: SplitTarget, spendingConditions: SpendingConditions?)async throws  -> [Proof]  {
+open func mintUnified(quoteId: String, amountSplitTarget: SplitTarget, spendingConditions: SpendingConditions?)async throws  -> [Proof]  {
     return
         try  await uniffiRustCallAsync(
             rustFutureFunc: {
                 uniffi_cdk_ffi_fn_method_wallet_mint_unified(
                     self.uniffiClonePointer(),
-                    FfiConverterString.lower(quoteId),FfiConverterOptionTypeAmount.lower(amount),FfiConverterTypeSplitTarget_lower(amountSplitTarget),FfiConverterOptionTypeSpendingConditions.lower(spendingConditions)
+                    FfiConverterString.lower(quoteId),FfiConverterTypeSplitTarget_lower(amountSplitTarget),FfiConverterOptionTypeSpendingConditions.lower(spendingConditions)
                 )
             },
             pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
@@ -3243,6 +3490,61 @@ open func payRequest(paymentRequest: PaymentRequest, customAmount: Amount?)async
 }
     
     /**
+     * Prepare a melt operation
+     *
+     * Returns a `PreparedMelt` that can be confirmed or cancelled.
+     */
+open func prepareMelt(quoteId: String)async throws  -> PreparedMelt  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_wallet_prepare_melt(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(quoteId)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_pointer,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_pointer,
+            freeFunc: ffi_cdk_ffi_rust_future_free_pointer,
+            liftFunc: FfiConverterTypePreparedMelt_lift,
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+    /**
+     * Prepare a melt operation with specific proofs
+     *
+     * This method allows melting proofs that may not be in the wallet's database,
+     * similar to how `receive_proofs` handles external proofs. The proofs will be
+     * added to the database and used for the melt operation.
+     *
+     * # Arguments
+     *
+     * * `quote_id` - The melt quote ID (obtained from `melt_quote`)
+     * * `proofs` - The proofs to melt (can be external proofs not in the wallet's database)
+     *
+     * # Returns
+     *
+     * A `PreparedMelt` that can be confirmed or cancelled
+     */
+open func prepareMeltProofs(quoteId: String, proofs: [Proof])async throws  -> PreparedMelt  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_wallet_prepare_melt_proofs(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(quoteId),FfiConverterSequenceTypeProof.lower(proofs)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_pointer,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_pointer,
+            freeFunc: ffi_cdk_ffi_rust_future_free_pointer,
+            liftFunc: FfiConverterTypePreparedMelt_lift,
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+    /**
      * Prepare a send operation
      */
 open func prepareSend(amount: Amount, options: SendOptions)async throws  -> PreparedSend  {
@@ -3285,39 +3587,19 @@ open func receive(token: Token, options: ReceiveOptions)async throws  -> Amount 
     /**
      * Receive proofs directly
      */
-open func receiveProofs(proofs: [Proof], options: ReceiveOptions, memo: String?)async throws  -> Amount  {
+open func receiveProofs(proofs: [Proof], options: ReceiveOptions, memo: String?, token: String?)async throws  -> Amount  {
     return
         try  await uniffiRustCallAsync(
             rustFutureFunc: {
                 uniffi_cdk_ffi_fn_method_wallet_receive_proofs(
                     self.uniffiClonePointer(),
-                    FfiConverterSequenceTypeProof.lower(proofs),FfiConverterTypeReceiveOptions_lower(options),FfiConverterOptionString.lower(memo)
+                    FfiConverterSequenceTypeProof.lower(proofs),FfiConverterTypeReceiveOptions_lower(options),FfiConverterOptionString.lower(memo),FfiConverterOptionString.lower(token)
                 )
             },
             pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
             completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
             freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
             liftFunc: FfiConverterTypeAmount_lift,
-            errorHandler: FfiConverterTypeFfiError_lift
-        )
-}
-    
-    /**
-     * Reclaim unspent proofs (mark them as unspent in the database)
-     */
-open func reclaimUnspent(proofs: [Proof])async throws   {
-    return
-        try  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_cdk_ffi_fn_method_wallet_reclaim_unspent(
-                    self.uniffiClonePointer(),
-                    FfiConverterSequenceTypeProof.lower(proofs)
-                )
-            },
-            pollFunc: ffi_cdk_ffi_rust_future_poll_void,
-            completeFunc: ffi_cdk_ffi_rust_future_complete_void,
-            freeFunc: ffi_cdk_ffi_rust_future_free_void,
-            liftFunc: { $0 },
             errorHandler: FfiConverterTypeFfiError_lift
         )
 }
@@ -3363,6 +3645,28 @@ open func refreshKeysets()async throws  -> [KeySetInfo]  {
 }
     
     /**
+     * Refresh a specific mint quote status from the mint.
+     * Updates local store with current state from mint.
+     * Does NOT mint tokens - use mint() to mint a specific quote.
+     */
+open func refreshMintQuote(quoteId: String)async throws  -> MintQuoteBolt11Response  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_wallet_refresh_mint_quote(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(quoteId)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeMintQuoteBolt11Response_lift,
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+    /**
      * Restore wallet from seed
      */
 open func restore()async throws  -> Restored  {
@@ -3398,6 +3702,26 @@ open func revertTransaction(id: TransactionId)async throws   {
             completeFunc: ffi_cdk_ffi_rust_future_complete_void,
             freeFunc: ffi_cdk_ffi_rust_future_free_void,
             liftFunc: { $0 },
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+    /**
+     * Revoke a pending send operation
+     */
+open func revokeSend(operationId: String)async throws  -> Amount  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_wallet_revoke_send(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(operationId)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeAmount_lift,
             errorHandler: FfiConverterTypeFfiError_lift
         )
 }
@@ -3833,6 +4157,69 @@ public protocol WalletDatabase: AnyObject, Sendable {
      * Remove Keys from storage
      */
     func removeKeys(id: Id) async throws 
+    
+    /**
+     * Add a wallet saga to storage (JSON serialized)
+     */
+    func addSaga(sagaJson: String) async throws 
+    
+    /**
+     * Get a wallet saga by ID (returns JSON serialized)
+     */
+    func getSaga(id: String) async throws  -> String?
+    
+    /**
+     * Update a wallet saga (JSON serialized) with optimistic locking.
+     *
+     * Returns `true` if the update succeeded (version matched),
+     * `false` if another instance modified the saga first.
+     */
+    func updateSaga(sagaJson: String) async throws  -> Bool
+    
+    /**
+     * Delete a wallet saga
+     */
+    func deleteSaga(id: String) async throws 
+    
+    /**
+     * Get all incomplete sagas (returns JSON serialized sagas)
+     */
+    func getIncompleteSagas() async throws  -> [String]
+    
+    /**
+     * Reserve proofs for an operation
+     */
+    func reserveProofs(ys: [PublicKey], operationId: String) async throws 
+    
+    /**
+     * Release proofs reserved by an operation
+     */
+    func releaseProofs(operationId: String) async throws 
+    
+    /**
+     * Get proofs reserved by an operation
+     */
+    func getReservedProofs(operationId: String) async throws  -> [ProofInfo]
+    
+    /**
+     * Reserve a melt quote for an operation
+     */
+    func reserveMeltQuote(quoteId: String, operationId: String) async throws 
+    
+    /**
+     * Release a melt quote reserved by an operation
+     */
+    func releaseMeltQuote(operationId: String) async throws 
+    
+    /**
+     * Reserve a mint quote for an operation
+     */
+    func reserveMintQuote(quoteId: String, operationId: String) async throws 
+    
+    /**
+     * Release a mint quote reserved by an operation
+     */
+    func releaseMintQuote(operationId: String) async throws 
     
 }
 /**
@@ -4562,6 +4949,249 @@ open func removeKeys(id: Id)async throws   {
                 uniffi_cdk_ffi_fn_method_walletdatabase_remove_keys(
                     self.uniffiClonePointer(),
                     FfiConverterTypeId_lower(id)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_void,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_void,
+            freeFunc: ffi_cdk_ffi_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+    /**
+     * Add a wallet saga to storage (JSON serialized)
+     */
+open func addSaga(sagaJson: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletdatabase_add_saga(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(sagaJson)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_void,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_void,
+            freeFunc: ffi_cdk_ffi_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+    /**
+     * Get a wallet saga by ID (returns JSON serialized)
+     */
+open func getSaga(id: String)async throws  -> String?  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletdatabase_get_saga(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(id)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterOptionString.lift,
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+    /**
+     * Update a wallet saga (JSON serialized) with optimistic locking.
+     *
+     * Returns `true` if the update succeeded (version matched),
+     * `false` if another instance modified the saga first.
+     */
+open func updateSaga(sagaJson: String)async throws  -> Bool  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletdatabase_update_saga(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(sagaJson)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_i8,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_i8,
+            freeFunc: ffi_cdk_ffi_rust_future_free_i8,
+            liftFunc: FfiConverterBool.lift,
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+    /**
+     * Delete a wallet saga
+     */
+open func deleteSaga(id: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletdatabase_delete_saga(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(id)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_void,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_void,
+            freeFunc: ffi_cdk_ffi_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+    /**
+     * Get all incomplete sagas (returns JSON serialized sagas)
+     */
+open func getIncompleteSagas()async throws  -> [String]  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletdatabase_get_incomplete_sagas(
+                    self.uniffiClonePointer()
+                    
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterSequenceString.lift,
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+    /**
+     * Reserve proofs for an operation
+     */
+open func reserveProofs(ys: [PublicKey], operationId: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletdatabase_reserve_proofs(
+                    self.uniffiClonePointer(),
+                    FfiConverterSequenceTypePublicKey.lower(ys),FfiConverterString.lower(operationId)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_void,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_void,
+            freeFunc: ffi_cdk_ffi_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+    /**
+     * Release proofs reserved by an operation
+     */
+open func releaseProofs(operationId: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletdatabase_release_proofs(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(operationId)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_void,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_void,
+            freeFunc: ffi_cdk_ffi_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+    /**
+     * Get proofs reserved by an operation
+     */
+open func getReservedProofs(operationId: String)async throws  -> [ProofInfo]  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletdatabase_get_reserved_proofs(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(operationId)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterSequenceTypeProofInfo.lift,
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+    /**
+     * Reserve a melt quote for an operation
+     */
+open func reserveMeltQuote(quoteId: String, operationId: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletdatabase_reserve_melt_quote(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(quoteId),FfiConverterString.lower(operationId)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_void,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_void,
+            freeFunc: ffi_cdk_ffi_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+    /**
+     * Release a melt quote reserved by an operation
+     */
+open func releaseMeltQuote(operationId: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletdatabase_release_melt_quote(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(operationId)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_void,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_void,
+            freeFunc: ffi_cdk_ffi_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+    /**
+     * Reserve a mint quote for an operation
+     */
+open func reserveMintQuote(quoteId: String, operationId: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletdatabase_reserve_mint_quote(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(quoteId),FfiConverterString.lower(operationId)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_void,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_void,
+            freeFunc: ffi_cdk_ffi_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+    /**
+     * Release a mint quote reserved by an operation
+     */
+open func releaseMintQuote(operationId: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletdatabase_release_mint_quote(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(operationId)
                 )
             },
             pollFunc: ffi_cdk_ffi_rust_future_poll_void,
@@ -6049,6 +6679,510 @@ fileprivate struct UniffiCallbackInterfaceWalletDatabase {
             )
             uniffiOutReturn.pointee = uniffiForeignFuture
         },
+        addSaga: { (
+            uniffiHandle: UInt64,
+            sagaJson: RustBuffer,
+            uniffiFutureCallback: @escaping UniffiForeignFutureCompleteVoid,
+            uniffiCallbackData: UInt64,
+            uniffiOutReturn: UnsafeMutablePointer<UniffiForeignFuture>
+        ) in
+            let makeCall = {
+                () async throws -> () in
+                guard let uniffiObj = try? FfiConverterTypeWalletDatabase.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try await uniffiObj.addSaga(
+                     sagaJson: try FfiConverterString.lift(sagaJson)
+                )
+            }
+
+            let uniffiHandleSuccess = { (returnValue: ()) in
+                uniffiFutureCallback(
+                    uniffiCallbackData,
+                    UniffiForeignFutureStructVoid(
+                        callStatus: RustCallStatus()
+                    )
+                )
+            }
+            let uniffiHandleError = { (statusCode, errorBuf) in
+                uniffiFutureCallback(
+                    uniffiCallbackData,
+                    UniffiForeignFutureStructVoid(
+                        callStatus: RustCallStatus(code: statusCode, errorBuf: errorBuf)
+                    )
+                )
+            }
+            let uniffiForeignFuture = uniffiTraitInterfaceCallAsyncWithError(
+                makeCall: makeCall,
+                handleSuccess: uniffiHandleSuccess,
+                handleError: uniffiHandleError,
+                lowerError: FfiConverterTypeFfiError_lower
+            )
+            uniffiOutReturn.pointee = uniffiForeignFuture
+        },
+        getSaga: { (
+            uniffiHandle: UInt64,
+            id: RustBuffer,
+            uniffiFutureCallback: @escaping UniffiForeignFutureCompleteRustBuffer,
+            uniffiCallbackData: UInt64,
+            uniffiOutReturn: UnsafeMutablePointer<UniffiForeignFuture>
+        ) in
+            let makeCall = {
+                () async throws -> String? in
+                guard let uniffiObj = try? FfiConverterTypeWalletDatabase.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try await uniffiObj.getSaga(
+                     id: try FfiConverterString.lift(id)
+                )
+            }
+
+            let uniffiHandleSuccess = { (returnValue: String?) in
+                uniffiFutureCallback(
+                    uniffiCallbackData,
+                    UniffiForeignFutureStructRustBuffer(
+                        returnValue: FfiConverterOptionString.lower(returnValue),
+                        callStatus: RustCallStatus()
+                    )
+                )
+            }
+            let uniffiHandleError = { (statusCode, errorBuf) in
+                uniffiFutureCallback(
+                    uniffiCallbackData,
+                    UniffiForeignFutureStructRustBuffer(
+                        returnValue: RustBuffer.empty(),
+                        callStatus: RustCallStatus(code: statusCode, errorBuf: errorBuf)
+                    )
+                )
+            }
+            let uniffiForeignFuture = uniffiTraitInterfaceCallAsyncWithError(
+                makeCall: makeCall,
+                handleSuccess: uniffiHandleSuccess,
+                handleError: uniffiHandleError,
+                lowerError: FfiConverterTypeFfiError_lower
+            )
+            uniffiOutReturn.pointee = uniffiForeignFuture
+        },
+        updateSaga: { (
+            uniffiHandle: UInt64,
+            sagaJson: RustBuffer,
+            uniffiFutureCallback: @escaping UniffiForeignFutureCompleteI8,
+            uniffiCallbackData: UInt64,
+            uniffiOutReturn: UnsafeMutablePointer<UniffiForeignFuture>
+        ) in
+            let makeCall = {
+                () async throws -> Bool in
+                guard let uniffiObj = try? FfiConverterTypeWalletDatabase.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try await uniffiObj.updateSaga(
+                     sagaJson: try FfiConverterString.lift(sagaJson)
+                )
+            }
+
+            let uniffiHandleSuccess = { (returnValue: Bool) in
+                uniffiFutureCallback(
+                    uniffiCallbackData,
+                    UniffiForeignFutureStructI8(
+                        returnValue: FfiConverterBool.lower(returnValue),
+                        callStatus: RustCallStatus()
+                    )
+                )
+            }
+            let uniffiHandleError = { (statusCode, errorBuf) in
+                uniffiFutureCallback(
+                    uniffiCallbackData,
+                    UniffiForeignFutureStructI8(
+                        returnValue: 0,
+                        callStatus: RustCallStatus(code: statusCode, errorBuf: errorBuf)
+                    )
+                )
+            }
+            let uniffiForeignFuture = uniffiTraitInterfaceCallAsyncWithError(
+                makeCall: makeCall,
+                handleSuccess: uniffiHandleSuccess,
+                handleError: uniffiHandleError,
+                lowerError: FfiConverterTypeFfiError_lower
+            )
+            uniffiOutReturn.pointee = uniffiForeignFuture
+        },
+        deleteSaga: { (
+            uniffiHandle: UInt64,
+            id: RustBuffer,
+            uniffiFutureCallback: @escaping UniffiForeignFutureCompleteVoid,
+            uniffiCallbackData: UInt64,
+            uniffiOutReturn: UnsafeMutablePointer<UniffiForeignFuture>
+        ) in
+            let makeCall = {
+                () async throws -> () in
+                guard let uniffiObj = try? FfiConverterTypeWalletDatabase.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try await uniffiObj.deleteSaga(
+                     id: try FfiConverterString.lift(id)
+                )
+            }
+
+            let uniffiHandleSuccess = { (returnValue: ()) in
+                uniffiFutureCallback(
+                    uniffiCallbackData,
+                    UniffiForeignFutureStructVoid(
+                        callStatus: RustCallStatus()
+                    )
+                )
+            }
+            let uniffiHandleError = { (statusCode, errorBuf) in
+                uniffiFutureCallback(
+                    uniffiCallbackData,
+                    UniffiForeignFutureStructVoid(
+                        callStatus: RustCallStatus(code: statusCode, errorBuf: errorBuf)
+                    )
+                )
+            }
+            let uniffiForeignFuture = uniffiTraitInterfaceCallAsyncWithError(
+                makeCall: makeCall,
+                handleSuccess: uniffiHandleSuccess,
+                handleError: uniffiHandleError,
+                lowerError: FfiConverterTypeFfiError_lower
+            )
+            uniffiOutReturn.pointee = uniffiForeignFuture
+        },
+        getIncompleteSagas: { (
+            uniffiHandle: UInt64,
+            uniffiFutureCallback: @escaping UniffiForeignFutureCompleteRustBuffer,
+            uniffiCallbackData: UInt64,
+            uniffiOutReturn: UnsafeMutablePointer<UniffiForeignFuture>
+        ) in
+            let makeCall = {
+                () async throws -> [String] in
+                guard let uniffiObj = try? FfiConverterTypeWalletDatabase.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try await uniffiObj.getIncompleteSagas(
+                )
+            }
+
+            let uniffiHandleSuccess = { (returnValue: [String]) in
+                uniffiFutureCallback(
+                    uniffiCallbackData,
+                    UniffiForeignFutureStructRustBuffer(
+                        returnValue: FfiConverterSequenceString.lower(returnValue),
+                        callStatus: RustCallStatus()
+                    )
+                )
+            }
+            let uniffiHandleError = { (statusCode, errorBuf) in
+                uniffiFutureCallback(
+                    uniffiCallbackData,
+                    UniffiForeignFutureStructRustBuffer(
+                        returnValue: RustBuffer.empty(),
+                        callStatus: RustCallStatus(code: statusCode, errorBuf: errorBuf)
+                    )
+                )
+            }
+            let uniffiForeignFuture = uniffiTraitInterfaceCallAsyncWithError(
+                makeCall: makeCall,
+                handleSuccess: uniffiHandleSuccess,
+                handleError: uniffiHandleError,
+                lowerError: FfiConverterTypeFfiError_lower
+            )
+            uniffiOutReturn.pointee = uniffiForeignFuture
+        },
+        reserveProofs: { (
+            uniffiHandle: UInt64,
+            ys: RustBuffer,
+            operationId: RustBuffer,
+            uniffiFutureCallback: @escaping UniffiForeignFutureCompleteVoid,
+            uniffiCallbackData: UInt64,
+            uniffiOutReturn: UnsafeMutablePointer<UniffiForeignFuture>
+        ) in
+            let makeCall = {
+                () async throws -> () in
+                guard let uniffiObj = try? FfiConverterTypeWalletDatabase.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try await uniffiObj.reserveProofs(
+                     ys: try FfiConverterSequenceTypePublicKey.lift(ys),
+                     operationId: try FfiConverterString.lift(operationId)
+                )
+            }
+
+            let uniffiHandleSuccess = { (returnValue: ()) in
+                uniffiFutureCallback(
+                    uniffiCallbackData,
+                    UniffiForeignFutureStructVoid(
+                        callStatus: RustCallStatus()
+                    )
+                )
+            }
+            let uniffiHandleError = { (statusCode, errorBuf) in
+                uniffiFutureCallback(
+                    uniffiCallbackData,
+                    UniffiForeignFutureStructVoid(
+                        callStatus: RustCallStatus(code: statusCode, errorBuf: errorBuf)
+                    )
+                )
+            }
+            let uniffiForeignFuture = uniffiTraitInterfaceCallAsyncWithError(
+                makeCall: makeCall,
+                handleSuccess: uniffiHandleSuccess,
+                handleError: uniffiHandleError,
+                lowerError: FfiConverterTypeFfiError_lower
+            )
+            uniffiOutReturn.pointee = uniffiForeignFuture
+        },
+        releaseProofs: { (
+            uniffiHandle: UInt64,
+            operationId: RustBuffer,
+            uniffiFutureCallback: @escaping UniffiForeignFutureCompleteVoid,
+            uniffiCallbackData: UInt64,
+            uniffiOutReturn: UnsafeMutablePointer<UniffiForeignFuture>
+        ) in
+            let makeCall = {
+                () async throws -> () in
+                guard let uniffiObj = try? FfiConverterTypeWalletDatabase.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try await uniffiObj.releaseProofs(
+                     operationId: try FfiConverterString.lift(operationId)
+                )
+            }
+
+            let uniffiHandleSuccess = { (returnValue: ()) in
+                uniffiFutureCallback(
+                    uniffiCallbackData,
+                    UniffiForeignFutureStructVoid(
+                        callStatus: RustCallStatus()
+                    )
+                )
+            }
+            let uniffiHandleError = { (statusCode, errorBuf) in
+                uniffiFutureCallback(
+                    uniffiCallbackData,
+                    UniffiForeignFutureStructVoid(
+                        callStatus: RustCallStatus(code: statusCode, errorBuf: errorBuf)
+                    )
+                )
+            }
+            let uniffiForeignFuture = uniffiTraitInterfaceCallAsyncWithError(
+                makeCall: makeCall,
+                handleSuccess: uniffiHandleSuccess,
+                handleError: uniffiHandleError,
+                lowerError: FfiConverterTypeFfiError_lower
+            )
+            uniffiOutReturn.pointee = uniffiForeignFuture
+        },
+        getReservedProofs: { (
+            uniffiHandle: UInt64,
+            operationId: RustBuffer,
+            uniffiFutureCallback: @escaping UniffiForeignFutureCompleteRustBuffer,
+            uniffiCallbackData: UInt64,
+            uniffiOutReturn: UnsafeMutablePointer<UniffiForeignFuture>
+        ) in
+            let makeCall = {
+                () async throws -> [ProofInfo] in
+                guard let uniffiObj = try? FfiConverterTypeWalletDatabase.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try await uniffiObj.getReservedProofs(
+                     operationId: try FfiConverterString.lift(operationId)
+                )
+            }
+
+            let uniffiHandleSuccess = { (returnValue: [ProofInfo]) in
+                uniffiFutureCallback(
+                    uniffiCallbackData,
+                    UniffiForeignFutureStructRustBuffer(
+                        returnValue: FfiConverterSequenceTypeProofInfo.lower(returnValue),
+                        callStatus: RustCallStatus()
+                    )
+                )
+            }
+            let uniffiHandleError = { (statusCode, errorBuf) in
+                uniffiFutureCallback(
+                    uniffiCallbackData,
+                    UniffiForeignFutureStructRustBuffer(
+                        returnValue: RustBuffer.empty(),
+                        callStatus: RustCallStatus(code: statusCode, errorBuf: errorBuf)
+                    )
+                )
+            }
+            let uniffiForeignFuture = uniffiTraitInterfaceCallAsyncWithError(
+                makeCall: makeCall,
+                handleSuccess: uniffiHandleSuccess,
+                handleError: uniffiHandleError,
+                lowerError: FfiConverterTypeFfiError_lower
+            )
+            uniffiOutReturn.pointee = uniffiForeignFuture
+        },
+        reserveMeltQuote: { (
+            uniffiHandle: UInt64,
+            quoteId: RustBuffer,
+            operationId: RustBuffer,
+            uniffiFutureCallback: @escaping UniffiForeignFutureCompleteVoid,
+            uniffiCallbackData: UInt64,
+            uniffiOutReturn: UnsafeMutablePointer<UniffiForeignFuture>
+        ) in
+            let makeCall = {
+                () async throws -> () in
+                guard let uniffiObj = try? FfiConverterTypeWalletDatabase.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try await uniffiObj.reserveMeltQuote(
+                     quoteId: try FfiConverterString.lift(quoteId),
+                     operationId: try FfiConverterString.lift(operationId)
+                )
+            }
+
+            let uniffiHandleSuccess = { (returnValue: ()) in
+                uniffiFutureCallback(
+                    uniffiCallbackData,
+                    UniffiForeignFutureStructVoid(
+                        callStatus: RustCallStatus()
+                    )
+                )
+            }
+            let uniffiHandleError = { (statusCode, errorBuf) in
+                uniffiFutureCallback(
+                    uniffiCallbackData,
+                    UniffiForeignFutureStructVoid(
+                        callStatus: RustCallStatus(code: statusCode, errorBuf: errorBuf)
+                    )
+                )
+            }
+            let uniffiForeignFuture = uniffiTraitInterfaceCallAsyncWithError(
+                makeCall: makeCall,
+                handleSuccess: uniffiHandleSuccess,
+                handleError: uniffiHandleError,
+                lowerError: FfiConverterTypeFfiError_lower
+            )
+            uniffiOutReturn.pointee = uniffiForeignFuture
+        },
+        releaseMeltQuote: { (
+            uniffiHandle: UInt64,
+            operationId: RustBuffer,
+            uniffiFutureCallback: @escaping UniffiForeignFutureCompleteVoid,
+            uniffiCallbackData: UInt64,
+            uniffiOutReturn: UnsafeMutablePointer<UniffiForeignFuture>
+        ) in
+            let makeCall = {
+                () async throws -> () in
+                guard let uniffiObj = try? FfiConverterTypeWalletDatabase.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try await uniffiObj.releaseMeltQuote(
+                     operationId: try FfiConverterString.lift(operationId)
+                )
+            }
+
+            let uniffiHandleSuccess = { (returnValue: ()) in
+                uniffiFutureCallback(
+                    uniffiCallbackData,
+                    UniffiForeignFutureStructVoid(
+                        callStatus: RustCallStatus()
+                    )
+                )
+            }
+            let uniffiHandleError = { (statusCode, errorBuf) in
+                uniffiFutureCallback(
+                    uniffiCallbackData,
+                    UniffiForeignFutureStructVoid(
+                        callStatus: RustCallStatus(code: statusCode, errorBuf: errorBuf)
+                    )
+                )
+            }
+            let uniffiForeignFuture = uniffiTraitInterfaceCallAsyncWithError(
+                makeCall: makeCall,
+                handleSuccess: uniffiHandleSuccess,
+                handleError: uniffiHandleError,
+                lowerError: FfiConverterTypeFfiError_lower
+            )
+            uniffiOutReturn.pointee = uniffiForeignFuture
+        },
+        reserveMintQuote: { (
+            uniffiHandle: UInt64,
+            quoteId: RustBuffer,
+            operationId: RustBuffer,
+            uniffiFutureCallback: @escaping UniffiForeignFutureCompleteVoid,
+            uniffiCallbackData: UInt64,
+            uniffiOutReturn: UnsafeMutablePointer<UniffiForeignFuture>
+        ) in
+            let makeCall = {
+                () async throws -> () in
+                guard let uniffiObj = try? FfiConverterTypeWalletDatabase.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try await uniffiObj.reserveMintQuote(
+                     quoteId: try FfiConverterString.lift(quoteId),
+                     operationId: try FfiConverterString.lift(operationId)
+                )
+            }
+
+            let uniffiHandleSuccess = { (returnValue: ()) in
+                uniffiFutureCallback(
+                    uniffiCallbackData,
+                    UniffiForeignFutureStructVoid(
+                        callStatus: RustCallStatus()
+                    )
+                )
+            }
+            let uniffiHandleError = { (statusCode, errorBuf) in
+                uniffiFutureCallback(
+                    uniffiCallbackData,
+                    UniffiForeignFutureStructVoid(
+                        callStatus: RustCallStatus(code: statusCode, errorBuf: errorBuf)
+                    )
+                )
+            }
+            let uniffiForeignFuture = uniffiTraitInterfaceCallAsyncWithError(
+                makeCall: makeCall,
+                handleSuccess: uniffiHandleSuccess,
+                handleError: uniffiHandleError,
+                lowerError: FfiConverterTypeFfiError_lower
+            )
+            uniffiOutReturn.pointee = uniffiForeignFuture
+        },
+        releaseMintQuote: { (
+            uniffiHandle: UInt64,
+            operationId: RustBuffer,
+            uniffiFutureCallback: @escaping UniffiForeignFutureCompleteVoid,
+            uniffiCallbackData: UInt64,
+            uniffiOutReturn: UnsafeMutablePointer<UniffiForeignFuture>
+        ) in
+            let makeCall = {
+                () async throws -> () in
+                guard let uniffiObj = try? FfiConverterTypeWalletDatabase.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try await uniffiObj.releaseMintQuote(
+                     operationId: try FfiConverterString.lift(operationId)
+                )
+            }
+
+            let uniffiHandleSuccess = { (returnValue: ()) in
+                uniffiFutureCallback(
+                    uniffiCallbackData,
+                    UniffiForeignFutureStructVoid(
+                        callStatus: RustCallStatus()
+                    )
+                )
+            }
+            let uniffiHandleError = { (statusCode, errorBuf) in
+                uniffiFutureCallback(
+                    uniffiCallbackData,
+                    UniffiForeignFutureStructVoid(
+                        callStatus: RustCallStatus(code: statusCode, errorBuf: errorBuf)
+                    )
+                )
+            }
+            let uniffiForeignFuture = uniffiTraitInterfaceCallAsyncWithError(
+                makeCall: makeCall,
+                handleSuccess: uniffiHandleSuccess,
+                handleError: uniffiHandleError,
+                lowerError: FfiConverterTypeFfiError_lower
+            )
+            uniffiOutReturn.pointee = uniffiForeignFuture
+        },
         uniffiFree: { (uniffiHandle: UInt64) -> () in
             let result = try? FfiConverterTypeWalletDatabase.handleMap.remove(handle: uniffiHandle)
             if result == nil {
@@ -6133,9 +7267,15 @@ public protocol WalletPostgresDatabaseProtocol: AnyObject, Sendable {
     
     func addMintQuote(quote: MintQuote) async throws 
     
+    func addSaga(sagaJson: String) async throws 
+    
     func addTransaction(transaction: Transaction) async throws 
     
+    func deleteSaga(id: String) async throws 
+    
     func getBalance(mintUrl: MintUrl?, unit: CurrencyUnit?, state: [ProofState]?) async throws  -> UInt64
+    
+    func getIncompleteSagas() async throws  -> [String]
     
     func getKeys(id: Id) async throws  -> Keys?
     
@@ -6159,6 +7299,10 @@ public protocol WalletPostgresDatabaseProtocol: AnyObject, Sendable {
     
     func getProofsByYs(ys: [PublicKey]) async throws  -> [ProofInfo]
     
+    func getReservedProofs(operationId: String) async throws  -> [ProofInfo]
+    
+    func getSaga(id: String) async throws  -> String?
+    
     func getTransaction(transactionId: TransactionId) async throws  -> Transaction?
     
     func getUnissuedMintQuotes() async throws  -> [MintQuote]
@@ -6175,6 +7319,12 @@ public protocol WalletPostgresDatabaseProtocol: AnyObject, Sendable {
     
     func listTransactions(mintUrl: MintUrl?, direction: TransactionDirection?, unit: CurrencyUnit?) async throws  -> [Transaction]
     
+    func releaseMeltQuote(operationId: String) async throws 
+    
+    func releaseMintQuote(operationId: String) async throws 
+    
+    func releaseProofs(operationId: String) async throws 
+    
     func removeKeys(id: Id) async throws 
     
     func removeMeltQuote(quoteId: String) async throws 
@@ -6185,11 +7335,19 @@ public protocol WalletPostgresDatabaseProtocol: AnyObject, Sendable {
     
     func removeTransaction(transactionId: TransactionId) async throws 
     
+    func reserveMeltQuote(quoteId: String, operationId: String) async throws 
+    
+    func reserveMintQuote(quoteId: String, operationId: String) async throws 
+    
+    func reserveProofs(ys: [PublicKey], operationId: String) async throws 
+    
     func updateMintUrl(oldMintUrl: MintUrl, newMintUrl: MintUrl) async throws 
     
     func updateProofs(added: [ProofInfo], removedYs: [PublicKey]) async throws 
     
     func updateProofsState(ys: [PublicKey], state: ProofState) async throws 
+    
+    func updateSaga(sagaJson: String) async throws  -> Bool
     
 }
 open class WalletPostgresDatabase: WalletPostgresDatabaseProtocol, @unchecked Sendable {
@@ -6343,6 +7501,23 @@ open func addMintQuote(quote: MintQuote)async throws   {
         )
 }
     
+open func addSaga(sagaJson: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletpostgresdatabase_add_saga(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(sagaJson)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_void,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_void,
+            freeFunc: ffi_cdk_ffi_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
 open func addTransaction(transaction: Transaction)async throws   {
     return
         try  await uniffiRustCallAsync(
@@ -6350,6 +7525,23 @@ open func addTransaction(transaction: Transaction)async throws   {
                 uniffi_cdk_ffi_fn_method_walletpostgresdatabase_add_transaction(
                     self.uniffiClonePointer(),
                     FfiConverterTypeTransaction_lower(transaction)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_void,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_void,
+            freeFunc: ffi_cdk_ffi_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+open func deleteSaga(id: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletpostgresdatabase_delete_saga(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(id)
                 )
             },
             pollFunc: ffi_cdk_ffi_rust_future_poll_void,
@@ -6373,6 +7565,23 @@ open func getBalance(mintUrl: MintUrl?, unit: CurrencyUnit?, state: [ProofState]
             completeFunc: ffi_cdk_ffi_rust_future_complete_u64,
             freeFunc: ffi_cdk_ffi_rust_future_free_u64,
             liftFunc: FfiConverterUInt64.lift,
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+open func getIncompleteSagas()async throws  -> [String]  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletpostgresdatabase_get_incomplete_sagas(
+                    self.uniffiClonePointer()
+                    
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterSequenceString.lift,
             errorHandler: FfiConverterTypeFfiError_lift
         )
 }
@@ -6564,6 +7773,40 @@ open func getProofsByYs(ys: [PublicKey])async throws  -> [ProofInfo]  {
         )
 }
     
+open func getReservedProofs(operationId: String)async throws  -> [ProofInfo]  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletpostgresdatabase_get_reserved_proofs(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(operationId)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterSequenceTypeProofInfo.lift,
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+open func getSaga(id: String)async throws  -> String?  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletpostgresdatabase_get_saga(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(id)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterOptionString.lift,
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
 open func getTransaction(transactionId: TransactionId)async throws  -> Transaction?  {
     return
         try  await uniffiRustCallAsync(
@@ -6700,6 +7943,57 @@ open func listTransactions(mintUrl: MintUrl?, direction: TransactionDirection?, 
         )
 }
     
+open func releaseMeltQuote(operationId: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletpostgresdatabase_release_melt_quote(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(operationId)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_void,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_void,
+            freeFunc: ffi_cdk_ffi_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+open func releaseMintQuote(operationId: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletpostgresdatabase_release_mint_quote(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(operationId)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_void,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_void,
+            freeFunc: ffi_cdk_ffi_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+open func releaseProofs(operationId: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletpostgresdatabase_release_proofs(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(operationId)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_void,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_void,
+            freeFunc: ffi_cdk_ffi_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
 open func removeKeys(id: Id)async throws   {
     return
         try  await uniffiRustCallAsync(
@@ -6785,6 +8079,57 @@ open func removeTransaction(transactionId: TransactionId)async throws   {
         )
 }
     
+open func reserveMeltQuote(quoteId: String, operationId: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletpostgresdatabase_reserve_melt_quote(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(quoteId),FfiConverterString.lower(operationId)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_void,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_void,
+            freeFunc: ffi_cdk_ffi_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+open func reserveMintQuote(quoteId: String, operationId: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletpostgresdatabase_reserve_mint_quote(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(quoteId),FfiConverterString.lower(operationId)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_void,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_void,
+            freeFunc: ffi_cdk_ffi_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+open func reserveProofs(ys: [PublicKey], operationId: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletpostgresdatabase_reserve_proofs(
+                    self.uniffiClonePointer(),
+                    FfiConverterSequenceTypePublicKey.lower(ys),FfiConverterString.lower(operationId)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_void,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_void,
+            freeFunc: ffi_cdk_ffi_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
 open func updateMintUrl(oldMintUrl: MintUrl, newMintUrl: MintUrl)async throws   {
     return
         try  await uniffiRustCallAsync(
@@ -6832,6 +8177,23 @@ open func updateProofsState(ys: [PublicKey], state: ProofState)async throws   {
             completeFunc: ffi_cdk_ffi_rust_future_complete_void,
             freeFunc: ffi_cdk_ffi_rust_future_free_void,
             liftFunc: { $0 },
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+open func updateSaga(sagaJson: String)async throws  -> Bool  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletpostgresdatabase_update_saga(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(sagaJson)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_i8,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_i8,
+            freeFunc: ffi_cdk_ffi_rust_future_free_i8,
+            liftFunc: FfiConverterBool.lift,
             errorHandler: FfiConverterTypeFfiError_lift
         )
 }
@@ -6907,60 +8269,16 @@ public protocol WalletRepositoryProtocol: AnyObject, Sendable {
     func addMint(mintUrl: MintUrl, unit: CurrencyUnit?, targetProofCount: UInt32?) async throws 
     
     /**
-     * Create a NUT-18 payment request
-     *
-     * Creates a payment request that can be shared to receive Cashu tokens.
-     * The request can include optional amount, description, and spending conditions.
-     *
-     * # Arguments
-     *
-     * * `params` - Parameters for creating the payment request
-     *
-     * # Transport Options
-     *
-     * - `"nostr"` - Uses Nostr relays for privacy-preserving delivery (requires nostr_relays)
-     * - `"http"` - Uses HTTP POST for delivery (requires http_url)
-     * - `"none"` - No transport; token must be delivered out-of-band
-     *
-     * # Example
-     *
-     * ```ignore
-     * let params = CreateRequestParams {
-     * amount: Some(100),
-     * unit: "sat".to_string(),
-     * description: Some("Coffee payment".to_string()),
-     * transport: "http".to_string(),
-     * http_url: Some("https://example.com/callback".to_string()),
-     * ..Default::default()
-     * };
-     * let result = wallet.create_request(params).await?;
-     * println!("Share this request: {}", result.payment_request.to_string_encoded());
-     *
-     * // If using Nostr transport, wait for payment:
-     * if let Some(nostr_info) = result.nostr_wait_info {
-     * let amount = wallet.wait_for_nostr_payment(nostr_info).await?;
-     * println!("Received {} sats", amount);
-     * }
-     * ```
-     */
-    func createRequest(params: CreateRequestParams) async throws  -> CreateRequestResult
-    
-    /**
      * Get wallet balances for all mints
      */
     func getBalances() async throws  -> [String: Amount]
     
-    func getMintKeysets(mintUrl: MintUrl) async throws  -> [KeySetInfo]
-    
-    /**
-     * Get list of mint URLs
-     */
-    func getMintUrls() async  -> [String]
-    
     /**
      * Get a specific wallet from WalletRepository by mint URL
+     *
+     * Returns an error if no wallet exists for the given mint URL.
      */
-    func getWallet(mintUrl: MintUrl) async  -> Wallet?
+    func getWallet(mintUrl: MintUrl, unit: CurrencyUnit) async throws  -> Wallet
     
     /**
      * Get all wallets from WalletRepository
@@ -6973,35 +8291,9 @@ public protocol WalletRepositoryProtocol: AnyObject, Sendable {
     func hasMint(mintUrl: MintUrl) async  -> Bool
     
     /**
-     * Pay a NUT-18 PaymentRequest
-     *
-     * This method handles paying a payment request by selecting an appropriate mint:
-     * - If `mint_url` is provided, it verifies the payment request accepts that mint
-     * and uses it to pay.
-     * - If `mint_url` is None, it automatically selects the mint that:
-     * 1. Is accepted by the payment request (matches one of the request's mints, or request accepts any mint)
-     * 2. Has the highest balance among matching mints
-     *
-     * # Arguments
-     *
-     * * `payment_request` - The NUT-18 payment request to pay
-     * * `mint_url` - Optional specific mint to use. If None, automatically selects the best matching mint.
-     * * `custom_amount` - Custom amount to pay (required if payment request has no amount)
-     *
-     * # Errors
-     *
-     * Returns an error if:
-     * - The payment request has no amount and no custom amount is provided
-     * - The specified mint is not accepted by the payment request
-     * - No matching mint has sufficient balance
-     * - No transport is available in the payment request
-     */
-    func payRequest(paymentRequest: PaymentRequest, mintUrl: MintUrl?, customAmount: Amount?) async throws 
-    
-    /**
      * Remove mint from WalletRepository
      */
-    func removeMint(mintUrl: MintUrl) async 
+    func removeMint(mintUrl: MintUrl, currencyUnit: CurrencyUnit) async throws 
     
     /**
      * Set metadata cache TTL (time-to-live) in seconds for all mints
@@ -7027,11 +8319,6 @@ public protocol WalletRepositoryProtocol: AnyObject, Sendable {
      * * `ttl_secs` - Optional TTL in seconds. If None, cache never expires.
      */
     func setMetadataCacheTtlForMint(mintUrl: MintUrl, ttlSecs: UInt64?) async throws 
-    
-    /**
-     * Get total balance across all mints
-     */
-    func totalBalance() async throws  -> Amount
     
 }
 /**
@@ -7135,60 +8422,6 @@ open func addMint(mintUrl: MintUrl, unit: CurrencyUnit?, targetProofCount: UInt3
 }
     
     /**
-     * Create a NUT-18 payment request
-     *
-     * Creates a payment request that can be shared to receive Cashu tokens.
-     * The request can include optional amount, description, and spending conditions.
-     *
-     * # Arguments
-     *
-     * * `params` - Parameters for creating the payment request
-     *
-     * # Transport Options
-     *
-     * - `"nostr"` - Uses Nostr relays for privacy-preserving delivery (requires nostr_relays)
-     * - `"http"` - Uses HTTP POST for delivery (requires http_url)
-     * - `"none"` - No transport; token must be delivered out-of-band
-     *
-     * # Example
-     *
-     * ```ignore
-     * let params = CreateRequestParams {
-     * amount: Some(100),
-     * unit: "sat".to_string(),
-     * description: Some("Coffee payment".to_string()),
-     * transport: "http".to_string(),
-     * http_url: Some("https://example.com/callback".to_string()),
-     * ..Default::default()
-     * };
-     * let result = wallet.create_request(params).await?;
-     * println!("Share this request: {}", result.payment_request.to_string_encoded());
-     *
-     * // If using Nostr transport, wait for payment:
-     * if let Some(nostr_info) = result.nostr_wait_info {
-     * let amount = wallet.wait_for_nostr_payment(nostr_info).await?;
-     * println!("Received {} sats", amount);
-     * }
-     * ```
-     */
-open func createRequest(params: CreateRequestParams)async throws  -> CreateRequestResult  {
-    return
-        try  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_cdk_ffi_fn_method_walletrepository_create_request(
-                    self.uniffiClonePointer(),
-                    FfiConverterTypeCreateRequestParams_lower(params)
-                )
-            },
-            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
-            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
-            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterTypeCreateRequestResult_lift,
-            errorHandler: FfiConverterTypeFfiError_lift
-        )
-}
-    
-    /**
      * Get wallet balances for all mints
      */
 open func getBalances()async throws  -> [String: Amount]  {
@@ -7208,62 +8441,25 @@ open func getBalances()async throws  -> [String: Amount]  {
         )
 }
     
-open func getMintKeysets(mintUrl: MintUrl)async throws  -> [KeySetInfo]  {
+    /**
+     * Get a specific wallet from WalletRepository by mint URL
+     *
+     * Returns an error if no wallet exists for the given mint URL.
+     */
+open func getWallet(mintUrl: MintUrl, unit: CurrencyUnit)async throws  -> Wallet  {
     return
         try  await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_cdk_ffi_fn_method_walletrepository_get_mint_keysets(
-                    self.uniffiClonePointer(),
-                    FfiConverterTypeMintUrl_lower(mintUrl)
-                )
-            },
-            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
-            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
-            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterSequenceTypeKeySetInfo.lift,
-            errorHandler: FfiConverterTypeFfiError_lift
-        )
-}
-    
-    /**
-     * Get list of mint URLs
-     */
-open func getMintUrls()async  -> [String]  {
-    return
-        try!  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_cdk_ffi_fn_method_walletrepository_get_mint_urls(
-                    self.uniffiClonePointer()
-                    
-                )
-            },
-            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
-            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
-            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterSequenceString.lift,
-            errorHandler: nil
-            
-        )
-}
-    
-    /**
-     * Get a specific wallet from WalletRepository by mint URL
-     */
-open func getWallet(mintUrl: MintUrl)async  -> Wallet?  {
-    return
-        try!  await uniffiRustCallAsync(
-            rustFutureFunc: {
                 uniffi_cdk_ffi_fn_method_walletrepository_get_wallet(
                     self.uniffiClonePointer(),
-                    FfiConverterTypeMintUrl_lower(mintUrl)
+                    FfiConverterTypeMintUrl_lower(mintUrl),FfiConverterTypeCurrencyUnit_lower(unit)
                 )
             },
-            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
-            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
-            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterOptionTypeWallet.lift,
-            errorHandler: nil
-            
+            pollFunc: ffi_cdk_ffi_rust_future_poll_pointer,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_pointer,
+            freeFunc: ffi_cdk_ffi_rust_future_free_pointer,
+            liftFunc: FfiConverterTypeWallet_lift,
+            errorHandler: FfiConverterTypeFfiError_lift
         )
 }
     
@@ -7310,36 +8506,15 @@ open func hasMint(mintUrl: MintUrl)async  -> Bool  {
 }
     
     /**
-     * Pay a NUT-18 PaymentRequest
-     *
-     * This method handles paying a payment request by selecting an appropriate mint:
-     * - If `mint_url` is provided, it verifies the payment request accepts that mint
-     * and uses it to pay.
-     * - If `mint_url` is None, it automatically selects the mint that:
-     * 1. Is accepted by the payment request (matches one of the request's mints, or request accepts any mint)
-     * 2. Has the highest balance among matching mints
-     *
-     * # Arguments
-     *
-     * * `payment_request` - The NUT-18 payment request to pay
-     * * `mint_url` - Optional specific mint to use. If None, automatically selects the best matching mint.
-     * * `custom_amount` - Custom amount to pay (required if payment request has no amount)
-     *
-     * # Errors
-     *
-     * Returns an error if:
-     * - The payment request has no amount and no custom amount is provided
-     * - The specified mint is not accepted by the payment request
-     * - No matching mint has sufficient balance
-     * - No transport is available in the payment request
+     * Remove mint from WalletRepository
      */
-open func payRequest(paymentRequest: PaymentRequest, mintUrl: MintUrl?, customAmount: Amount?)async throws   {
+open func removeMint(mintUrl: MintUrl, currencyUnit: CurrencyUnit)async throws   {
     return
         try  await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_cdk_ffi_fn_method_walletrepository_pay_request(
+                uniffi_cdk_ffi_fn_method_walletrepository_remove_mint(
                     self.uniffiClonePointer(),
-                    FfiConverterTypePaymentRequest_lower(paymentRequest),FfiConverterOptionTypeMintUrl.lower(mintUrl),FfiConverterOptionTypeAmount.lower(customAmount)
+                    FfiConverterTypeMintUrl_lower(mintUrl),FfiConverterTypeCurrencyUnit_lower(currencyUnit)
                 )
             },
             pollFunc: ffi_cdk_ffi_rust_future_poll_void,
@@ -7347,27 +8522,6 @@ open func payRequest(paymentRequest: PaymentRequest, mintUrl: MintUrl?, customAm
             freeFunc: ffi_cdk_ffi_rust_future_free_void,
             liftFunc: { $0 },
             errorHandler: FfiConverterTypeFfiError_lift
-        )
-}
-    
-    /**
-     * Remove mint from WalletRepository
-     */
-open func removeMint(mintUrl: MintUrl)async   {
-    return
-        try!  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_cdk_ffi_fn_method_walletrepository_remove_mint(
-                    self.uniffiClonePointer(),
-                    FfiConverterTypeMintUrl_lower(mintUrl)
-                )
-            },
-            pollFunc: ffi_cdk_ffi_rust_future_poll_void,
-            completeFunc: ffi_cdk_ffi_rust_future_complete_void,
-            freeFunc: ffi_cdk_ffi_rust_future_free_void,
-            liftFunc: { $0 },
-            errorHandler: nil
-            
         )
 }
     
@@ -7423,26 +8577,6 @@ open func setMetadataCacheTtlForMint(mintUrl: MintUrl, ttlSecs: UInt64?)async th
             completeFunc: ffi_cdk_ffi_rust_future_complete_void,
             freeFunc: ffi_cdk_ffi_rust_future_free_void,
             liftFunc: { $0 },
-            errorHandler: FfiConverterTypeFfiError_lift
-        )
-}
-    
-    /**
-     * Get total balance across all mints
-     */
-open func totalBalance()async throws  -> Amount  {
-    return
-        try  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_cdk_ffi_fn_method_walletrepository_total_balance(
-                    self.uniffiClonePointer()
-                    
-                )
-            },
-            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
-            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
-            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterTypeAmount_lift,
             errorHandler: FfiConverterTypeFfiError_lift
         )
 }
@@ -7520,9 +8654,15 @@ public protocol WalletSqliteDatabaseProtocol: AnyObject, Sendable {
     
     func addMintQuote(quote: MintQuote) async throws 
     
+    func addSaga(sagaJson: String) async throws 
+    
     func addTransaction(transaction: Transaction) async throws 
     
+    func deleteSaga(id: String) async throws 
+    
     func getBalance(mintUrl: MintUrl?, unit: CurrencyUnit?, state: [ProofState]?) async throws  -> UInt64
+    
+    func getIncompleteSagas() async throws  -> [String]
     
     func getKeys(id: Id) async throws  -> Keys?
     
@@ -7546,6 +8686,10 @@ public protocol WalletSqliteDatabaseProtocol: AnyObject, Sendable {
     
     func getProofsByYs(ys: [PublicKey]) async throws  -> [ProofInfo]
     
+    func getReservedProofs(operationId: String) async throws  -> [ProofInfo]
+    
+    func getSaga(id: String) async throws  -> String?
+    
     func getTransaction(transactionId: TransactionId) async throws  -> Transaction?
     
     func getUnissuedMintQuotes() async throws  -> [MintQuote]
@@ -7562,6 +8706,12 @@ public protocol WalletSqliteDatabaseProtocol: AnyObject, Sendable {
     
     func listTransactions(mintUrl: MintUrl?, direction: TransactionDirection?, unit: CurrencyUnit?) async throws  -> [Transaction]
     
+    func releaseMeltQuote(operationId: String) async throws 
+    
+    func releaseMintQuote(operationId: String) async throws 
+    
+    func releaseProofs(operationId: String) async throws 
+    
     func removeKeys(id: Id) async throws 
     
     func removeMeltQuote(quoteId: String) async throws 
@@ -7572,11 +8722,19 @@ public protocol WalletSqliteDatabaseProtocol: AnyObject, Sendable {
     
     func removeTransaction(transactionId: TransactionId) async throws 
     
+    func reserveMeltQuote(quoteId: String, operationId: String) async throws 
+    
+    func reserveMintQuote(quoteId: String, operationId: String) async throws 
+    
+    func reserveProofs(ys: [PublicKey], operationId: String) async throws 
+    
     func updateMintUrl(oldMintUrl: MintUrl, newMintUrl: MintUrl) async throws 
     
     func updateProofs(added: [ProofInfo], removedYs: [PublicKey]) async throws 
     
     func updateProofsState(ys: [PublicKey], state: ProofState) async throws 
+    
+    func updateSaga(sagaJson: String) async throws  -> Bool
     
 }
 /**
@@ -7740,6 +8898,23 @@ open func addMintQuote(quote: MintQuote)async throws   {
         )
 }
     
+open func addSaga(sagaJson: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletsqlitedatabase_add_saga(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(sagaJson)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_void,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_void,
+            freeFunc: ffi_cdk_ffi_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
 open func addTransaction(transaction: Transaction)async throws   {
     return
         try  await uniffiRustCallAsync(
@@ -7747,6 +8922,23 @@ open func addTransaction(transaction: Transaction)async throws   {
                 uniffi_cdk_ffi_fn_method_walletsqlitedatabase_add_transaction(
                     self.uniffiClonePointer(),
                     FfiConverterTypeTransaction_lower(transaction)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_void,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_void,
+            freeFunc: ffi_cdk_ffi_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+open func deleteSaga(id: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletsqlitedatabase_delete_saga(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(id)
                 )
             },
             pollFunc: ffi_cdk_ffi_rust_future_poll_void,
@@ -7770,6 +8962,23 @@ open func getBalance(mintUrl: MintUrl?, unit: CurrencyUnit?, state: [ProofState]
             completeFunc: ffi_cdk_ffi_rust_future_complete_u64,
             freeFunc: ffi_cdk_ffi_rust_future_free_u64,
             liftFunc: FfiConverterUInt64.lift,
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+open func getIncompleteSagas()async throws  -> [String]  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletsqlitedatabase_get_incomplete_sagas(
+                    self.uniffiClonePointer()
+                    
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterSequenceString.lift,
             errorHandler: FfiConverterTypeFfiError_lift
         )
 }
@@ -7961,6 +9170,40 @@ open func getProofsByYs(ys: [PublicKey])async throws  -> [ProofInfo]  {
         )
 }
     
+open func getReservedProofs(operationId: String)async throws  -> [ProofInfo]  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletsqlitedatabase_get_reserved_proofs(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(operationId)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterSequenceTypeProofInfo.lift,
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+open func getSaga(id: String)async throws  -> String?  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletsqlitedatabase_get_saga(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(id)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_rust_buffer,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_rust_buffer,
+            freeFunc: ffi_cdk_ffi_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterOptionString.lift,
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
 open func getTransaction(transactionId: TransactionId)async throws  -> Transaction?  {
     return
         try  await uniffiRustCallAsync(
@@ -8097,6 +9340,57 @@ open func listTransactions(mintUrl: MintUrl?, direction: TransactionDirection?, 
         )
 }
     
+open func releaseMeltQuote(operationId: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletsqlitedatabase_release_melt_quote(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(operationId)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_void,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_void,
+            freeFunc: ffi_cdk_ffi_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+open func releaseMintQuote(operationId: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletsqlitedatabase_release_mint_quote(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(operationId)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_void,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_void,
+            freeFunc: ffi_cdk_ffi_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+open func releaseProofs(operationId: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletsqlitedatabase_release_proofs(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(operationId)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_void,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_void,
+            freeFunc: ffi_cdk_ffi_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
 open func removeKeys(id: Id)async throws   {
     return
         try  await uniffiRustCallAsync(
@@ -8182,6 +9476,57 @@ open func removeTransaction(transactionId: TransactionId)async throws   {
         )
 }
     
+open func reserveMeltQuote(quoteId: String, operationId: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletsqlitedatabase_reserve_melt_quote(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(quoteId),FfiConverterString.lower(operationId)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_void,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_void,
+            freeFunc: ffi_cdk_ffi_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+open func reserveMintQuote(quoteId: String, operationId: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletsqlitedatabase_reserve_mint_quote(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(quoteId),FfiConverterString.lower(operationId)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_void,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_void,
+            freeFunc: ffi_cdk_ffi_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+open func reserveProofs(ys: [PublicKey], operationId: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletsqlitedatabase_reserve_proofs(
+                    self.uniffiClonePointer(),
+                    FfiConverterSequenceTypePublicKey.lower(ys),FfiConverterString.lower(operationId)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_void,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_void,
+            freeFunc: ffi_cdk_ffi_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
 open func updateMintUrl(oldMintUrl: MintUrl, newMintUrl: MintUrl)async throws   {
     return
         try  await uniffiRustCallAsync(
@@ -8229,6 +9574,23 @@ open func updateProofsState(ys: [PublicKey], state: ProofState)async throws   {
             completeFunc: ffi_cdk_ffi_rust_future_complete_void,
             freeFunc: ffi_cdk_ffi_rust_future_free_void,
             liftFunc: { $0 },
+            errorHandler: FfiConverterTypeFfiError_lift
+        )
+}
+    
+open func updateSaga(sagaJson: String)async throws  -> Bool  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_cdk_ffi_fn_method_walletsqlitedatabase_update_saga(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(sagaJson)
+                )
+            },
+            pollFunc: ffi_cdk_ffi_rust_future_poll_i8,
+            completeFunc: ffi_cdk_ffi_rust_future_complete_i8,
+            freeFunc: ffi_cdk_ffi_rust_future_free_i8,
+            liftFunc: FfiConverterBool.lift,
             errorHandler: FfiConverterTypeFfiError_lift
         )
 }
@@ -9537,6 +10899,113 @@ public func FfiConverterTypeDecodedInvoice_lower(_ value: DecodedInvoice) -> Rus
 
 
 /**
+ * FFI-compatible FinalizedMelt result
+ */
+public struct FinalizedMelt {
+    public let quoteId: String
+    public let state: QuoteState
+    public let preimage: String?
+    public let change: [Proof]?
+    public let amount: Amount
+    public let feePaid: Amount
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(quoteId: String, state: QuoteState, preimage: String?, change: [Proof]?, amount: Amount, feePaid: Amount) {
+        self.quoteId = quoteId
+        self.state = state
+        self.preimage = preimage
+        self.change = change
+        self.amount = amount
+        self.feePaid = feePaid
+    }
+}
+
+#if compiler(>=6)
+extension FinalizedMelt: Sendable {}
+#endif
+
+
+extension FinalizedMelt: Equatable, Hashable {
+    public static func ==(lhs: FinalizedMelt, rhs: FinalizedMelt) -> Bool {
+        if lhs.quoteId != rhs.quoteId {
+            return false
+        }
+        if lhs.state != rhs.state {
+            return false
+        }
+        if lhs.preimage != rhs.preimage {
+            return false
+        }
+        if lhs.change != rhs.change {
+            return false
+        }
+        if lhs.amount != rhs.amount {
+            return false
+        }
+        if lhs.feePaid != rhs.feePaid {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(quoteId)
+        hasher.combine(state)
+        hasher.combine(preimage)
+        hasher.combine(change)
+        hasher.combine(amount)
+        hasher.combine(feePaid)
+    }
+}
+
+extension FinalizedMelt: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeFinalizedMelt: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> FinalizedMelt {
+        return
+            try FinalizedMelt(
+                quoteId: FfiConverterString.read(from: &buf), 
+                state: FfiConverterTypeQuoteState.read(from: &buf), 
+                preimage: FfiConverterOptionString.read(from: &buf), 
+                change: FfiConverterOptionSequenceTypeProof.read(from: &buf), 
+                amount: FfiConverterTypeAmount.read(from: &buf), 
+                feePaid: FfiConverterTypeAmount.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: FinalizedMelt, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.quoteId, into: &buf)
+        FfiConverterTypeQuoteState.write(value.state, into: &buf)
+        FfiConverterOptionString.write(value.preimage, into: &buf)
+        FfiConverterOptionSequenceTypeProof.write(value.change, into: &buf)
+        FfiConverterTypeAmount.write(value.amount, into: &buf)
+        FfiConverterTypeAmount.write(value.feePaid, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFinalizedMelt_lift(_ buf: RustBuffer) throws -> FinalizedMelt {
+    return try FfiConverterTypeFinalizedMelt.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFinalizedMelt_lower(_ value: FinalizedMelt) -> RustBuffer {
+    return FfiConverterTypeFinalizedMelt.lower(value)
+}
+
+
+/**
  * FFI-compatible Id (for keyset IDs)
  */
 public struct Id {
@@ -9945,6 +11414,81 @@ public func FfiConverterTypeKeys_lower(_ value: Keys) -> RustBuffer {
 
 
 /**
+ * FFI-compatible options for confirming a melt operation
+ */
+public struct MeltConfirmOptions {
+    /**
+     * Skip the pre-melt swap and send proofs directly to melt.
+     * When true, saves swap input fees but gets change from melt instead.
+     */
+    public let skipSwap: Bool
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Skip the pre-melt swap and send proofs directly to melt.
+         * When true, saves swap input fees but gets change from melt instead.
+         */skipSwap: Bool) {
+        self.skipSwap = skipSwap
+    }
+}
+
+#if compiler(>=6)
+extension MeltConfirmOptions: Sendable {}
+#endif
+
+
+extension MeltConfirmOptions: Equatable, Hashable {
+    public static func ==(lhs: MeltConfirmOptions, rhs: MeltConfirmOptions) -> Bool {
+        if lhs.skipSwap != rhs.skipSwap {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(skipSwap)
+    }
+}
+
+extension MeltConfirmOptions: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeMeltConfirmOptions: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> MeltConfirmOptions {
+        return
+            try MeltConfirmOptions(
+                skipSwap: FfiConverterBool.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: MeltConfirmOptions, into buf: inout [UInt8]) {
+        FfiConverterBool.write(value.skipSwap, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeMeltConfirmOptions_lift(_ buf: RustBuffer) throws -> MeltConfirmOptions {
+    return try FfiConverterTypeMeltConfirmOptions.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeMeltConfirmOptions_lower(_ value: MeltConfirmOptions) -> RustBuffer {
+    return FfiConverterTypeMeltConfirmOptions.lower(value)
+}
+
+
+/**
  * FFI-compatible MeltMethodSettings (NUT-05)
  */
 public struct MeltMethodSettings {
@@ -10089,6 +11633,14 @@ public struct MeltQuote {
      * Payment method
      */
     public let paymentMethod: PaymentMethod
+    /**
+     * Operation ID that reserved this quote
+     */
+    public let usedByOperation: String?
+    /**
+     * Version for optimistic locking
+     */
+    public let version: UInt32
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
@@ -10119,7 +11671,13 @@ public struct MeltQuote {
          */paymentPreimage: String?, 
         /**
          * Payment method
-         */paymentMethod: PaymentMethod) {
+         */paymentMethod: PaymentMethod, 
+        /**
+         * Operation ID that reserved this quote
+         */usedByOperation: String?, 
+        /**
+         * Version for optimistic locking
+         */version: UInt32) {
         self.id = id
         self.amount = amount
         self.unit = unit
@@ -10129,6 +11687,8 @@ public struct MeltQuote {
         self.expiry = expiry
         self.paymentPreimage = paymentPreimage
         self.paymentMethod = paymentMethod
+        self.usedByOperation = usedByOperation
+        self.version = version
     }
 }
 
@@ -10166,6 +11726,12 @@ extension MeltQuote: Equatable, Hashable {
         if lhs.paymentMethod != rhs.paymentMethod {
             return false
         }
+        if lhs.usedByOperation != rhs.usedByOperation {
+            return false
+        }
+        if lhs.version != rhs.version {
+            return false
+        }
         return true
     }
 
@@ -10179,6 +11745,8 @@ extension MeltQuote: Equatable, Hashable {
         hasher.combine(expiry)
         hasher.combine(paymentPreimage)
         hasher.combine(paymentMethod)
+        hasher.combine(usedByOperation)
+        hasher.combine(version)
     }
 }
 
@@ -10201,7 +11769,9 @@ public struct FfiConverterTypeMeltQuote: FfiConverterRustBuffer {
                 state: FfiConverterTypeQuoteState.read(from: &buf), 
                 expiry: FfiConverterUInt64.read(from: &buf), 
                 paymentPreimage: FfiConverterOptionString.read(from: &buf), 
-                paymentMethod: FfiConverterTypePaymentMethod.read(from: &buf)
+                paymentMethod: FfiConverterTypePaymentMethod.read(from: &buf), 
+                usedByOperation: FfiConverterOptionString.read(from: &buf), 
+                version: FfiConverterUInt32.read(from: &buf)
         )
     }
 
@@ -10215,6 +11785,8 @@ public struct FfiConverterTypeMeltQuote: FfiConverterRustBuffer {
         FfiConverterUInt64.write(value.expiry, into: &buf)
         FfiConverterOptionString.write(value.paymentPreimage, into: &buf)
         FfiConverterTypePaymentMethod.write(value.paymentMethod, into: &buf)
+        FfiConverterOptionString.write(value.usedByOperation, into: &buf)
+        FfiConverterUInt32.write(value.version, into: &buf)
     }
 }
 
@@ -10596,105 +12168,6 @@ public func FfiConverterTypeMeltQuoteCustomResponse_lift(_ buf: RustBuffer) thro
 #endif
 public func FfiConverterTypeMeltQuoteCustomResponse_lower(_ value: MeltQuoteCustomResponse) -> RustBuffer {
     return FfiConverterTypeMeltQuoteCustomResponse.lower(value)
-}
-
-
-/**
- * FFI-compatible Melted result
- */
-public struct Melted {
-    public let state: QuoteState
-    public let preimage: String?
-    public let change: [Proof]?
-    public let amount: Amount
-    public let feePaid: Amount
-
-    // Default memberwise initializers are never public by default, so we
-    // declare one manually.
-    public init(state: QuoteState, preimage: String?, change: [Proof]?, amount: Amount, feePaid: Amount) {
-        self.state = state
-        self.preimage = preimage
-        self.change = change
-        self.amount = amount
-        self.feePaid = feePaid
-    }
-}
-
-#if compiler(>=6)
-extension Melted: Sendable {}
-#endif
-
-
-extension Melted: Equatable, Hashable {
-    public static func ==(lhs: Melted, rhs: Melted) -> Bool {
-        if lhs.state != rhs.state {
-            return false
-        }
-        if lhs.preimage != rhs.preimage {
-            return false
-        }
-        if lhs.change != rhs.change {
-            return false
-        }
-        if lhs.amount != rhs.amount {
-            return false
-        }
-        if lhs.feePaid != rhs.feePaid {
-            return false
-        }
-        return true
-    }
-
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(state)
-        hasher.combine(preimage)
-        hasher.combine(change)
-        hasher.combine(amount)
-        hasher.combine(feePaid)
-    }
-}
-
-extension Melted: Codable {}
-
-
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public struct FfiConverterTypeMelted: FfiConverterRustBuffer {
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Melted {
-        return
-            try Melted(
-                state: FfiConverterTypeQuoteState.read(from: &buf), 
-                preimage: FfiConverterOptionString.read(from: &buf), 
-                change: FfiConverterOptionSequenceTypeProof.read(from: &buf), 
-                amount: FfiConverterTypeAmount.read(from: &buf), 
-                feePaid: FfiConverterTypeAmount.read(from: &buf)
-        )
-    }
-
-    public static func write(_ value: Melted, into buf: inout [UInt8]) {
-        FfiConverterTypeQuoteState.write(value.state, into: &buf)
-        FfiConverterOptionString.write(value.preimage, into: &buf)
-        FfiConverterOptionSequenceTypeProof.write(value.change, into: &buf)
-        FfiConverterTypeAmount.write(value.amount, into: &buf)
-        FfiConverterTypeAmount.write(value.feePaid, into: &buf)
-    }
-}
-
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeMelted_lift(_ buf: RustBuffer) throws -> Melted {
-    return try FfiConverterTypeMelted.lift(buf)
-}
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeMelted_lower(_ value: Melted) -> RustBuffer {
-    return FfiConverterTypeMelted.lower(value)
 }
 
 
@@ -11165,6 +12638,14 @@ public struct MintQuote {
      * Secret key (optional, hex-encoded)
      */
     public let secretKey: String?
+    /**
+     * Operation ID that reserved this quote
+     */
+    public let usedByOperation: String?
+    /**
+     * Version for optimistic locking
+     */
+    public let version: UInt32
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
@@ -11201,7 +12682,13 @@ public struct MintQuote {
          */paymentMethod: PaymentMethod, 
         /**
          * Secret key (optional, hex-encoded)
-         */secretKey: String?) {
+         */secretKey: String?, 
+        /**
+         * Operation ID that reserved this quote
+         */usedByOperation: String?, 
+        /**
+         * Version for optimistic locking
+         */version: UInt32) {
         self.id = id
         self.amount = amount
         self.unit = unit
@@ -11213,6 +12700,8 @@ public struct MintQuote {
         self.amountPaid = amountPaid
         self.paymentMethod = paymentMethod
         self.secretKey = secretKey
+        self.usedByOperation = usedByOperation
+        self.version = version
     }
 }
 
@@ -11256,6 +12745,12 @@ extension MintQuote: Equatable, Hashable {
         if lhs.secretKey != rhs.secretKey {
             return false
         }
+        if lhs.usedByOperation != rhs.usedByOperation {
+            return false
+        }
+        if lhs.version != rhs.version {
+            return false
+        }
         return true
     }
 
@@ -11271,6 +12766,8 @@ extension MintQuote: Equatable, Hashable {
         hasher.combine(amountPaid)
         hasher.combine(paymentMethod)
         hasher.combine(secretKey)
+        hasher.combine(usedByOperation)
+        hasher.combine(version)
     }
 }
 
@@ -11295,7 +12792,9 @@ public struct FfiConverterTypeMintQuote: FfiConverterRustBuffer {
                 amountIssued: FfiConverterTypeAmount.read(from: &buf), 
                 amountPaid: FfiConverterTypeAmount.read(from: &buf), 
                 paymentMethod: FfiConverterTypePaymentMethod.read(from: &buf), 
-                secretKey: FfiConverterOptionString.read(from: &buf)
+                secretKey: FfiConverterOptionString.read(from: &buf), 
+                usedByOperation: FfiConverterOptionString.read(from: &buf), 
+                version: FfiConverterUInt32.read(from: &buf)
         )
     }
 
@@ -11311,6 +12810,8 @@ public struct FfiConverterTypeMintQuote: FfiConverterRustBuffer {
         FfiConverterTypeAmount.write(value.amountPaid, into: &buf)
         FfiConverterTypePaymentMethod.write(value.paymentMethod, into: &buf)
         FfiConverterOptionString.write(value.secretKey, into: &buf)
+        FfiConverterOptionString.write(value.usedByOperation, into: &buf)
+        FfiConverterUInt32.write(value.version, into: &buf)
     }
 }
 
@@ -12812,6 +14313,14 @@ public struct ProofInfo {
      * Currency unit
      */
     public let unit: CurrencyUnit
+    /**
+     * Operation ID that is using/spending this proof
+     */
+    public let usedByOperation: String?
+    /**
+     * Operation ID that created this proof
+     */
+    public let createdByOperation: String?
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
@@ -12833,13 +14342,21 @@ public struct ProofInfo {
          */spendingCondition: SpendingConditions?, 
         /**
          * Currency unit
-         */unit: CurrencyUnit) {
+         */unit: CurrencyUnit, 
+        /**
+         * Operation ID that is using/spending this proof
+         */usedByOperation: String?, 
+        /**
+         * Operation ID that created this proof
+         */createdByOperation: String?) {
         self.proof = proof
         self.y = y
         self.mintUrl = mintUrl
         self.state = state
         self.spendingCondition = spendingCondition
         self.unit = unit
+        self.usedByOperation = usedByOperation
+        self.createdByOperation = createdByOperation
     }
 }
 
@@ -12868,6 +14385,12 @@ extension ProofInfo: Equatable, Hashable {
         if lhs.unit != rhs.unit {
             return false
         }
+        if lhs.usedByOperation != rhs.usedByOperation {
+            return false
+        }
+        if lhs.createdByOperation != rhs.createdByOperation {
+            return false
+        }
         return true
     }
 
@@ -12878,6 +14401,8 @@ extension ProofInfo: Equatable, Hashable {
         hasher.combine(state)
         hasher.combine(spendingCondition)
         hasher.combine(unit)
+        hasher.combine(usedByOperation)
+        hasher.combine(createdByOperation)
     }
 }
 
@@ -12897,7 +14422,9 @@ public struct FfiConverterTypeProofInfo: FfiConverterRustBuffer {
                 mintUrl: FfiConverterTypeMintUrl.read(from: &buf), 
                 state: FfiConverterTypeProofState.read(from: &buf), 
                 spendingCondition: FfiConverterOptionTypeSpendingConditions.read(from: &buf), 
-                unit: FfiConverterTypeCurrencyUnit.read(from: &buf)
+                unit: FfiConverterTypeCurrencyUnit.read(from: &buf), 
+                usedByOperation: FfiConverterOptionString.read(from: &buf), 
+                createdByOperation: FfiConverterOptionString.read(from: &buf)
         )
     }
 
@@ -12908,6 +14435,8 @@ public struct FfiConverterTypeProofInfo: FfiConverterRustBuffer {
         FfiConverterTypeProofState.write(value.state, into: &buf)
         FfiConverterOptionTypeSpendingConditions.write(value.spendingCondition, into: &buf)
         FfiConverterTypeCurrencyUnit.write(value.unit, into: &buf)
+        FfiConverterOptionString.write(value.usedByOperation, into: &buf)
+        FfiConverterOptionString.write(value.createdByOperation, into: &buf)
     }
 }
 
@@ -14052,6 +15581,151 @@ public func FfiConverterTypeSupportedSettings_lower(_ value: SupportedSettings) 
 
 
 /**
+ * Token data FFI type
+ *
+ * Contains information extracted from a parsed token.
+ */
+public struct TokenData {
+    /**
+     * The mint URL from the token
+     */
+    public let mintUrl: MintUrl
+    /**
+     * The proofs contained in the token
+     */
+    public let proofs: [Proof]
+    /**
+     * The memo from the token, if present
+     */
+    public let memo: String?
+    /**
+     * Value of token in smallest unit
+     */
+    public let value: Amount
+    /**
+     * Currency unit
+     */
+    public let unit: CurrencyUnit
+    /**
+     * Fee to redeem (None if unknown)
+     */
+    public let redeemFee: Amount?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * The mint URL from the token
+         */mintUrl: MintUrl, 
+        /**
+         * The proofs contained in the token
+         */proofs: [Proof], 
+        /**
+         * The memo from the token, if present
+         */memo: String?, 
+        /**
+         * Value of token in smallest unit
+         */value: Amount, 
+        /**
+         * Currency unit
+         */unit: CurrencyUnit, 
+        /**
+         * Fee to redeem (None if unknown)
+         */redeemFee: Amount?) {
+        self.mintUrl = mintUrl
+        self.proofs = proofs
+        self.memo = memo
+        self.value = value
+        self.unit = unit
+        self.redeemFee = redeemFee
+    }
+}
+
+#if compiler(>=6)
+extension TokenData: Sendable {}
+#endif
+
+
+extension TokenData: Equatable, Hashable {
+    public static func ==(lhs: TokenData, rhs: TokenData) -> Bool {
+        if lhs.mintUrl != rhs.mintUrl {
+            return false
+        }
+        if lhs.proofs != rhs.proofs {
+            return false
+        }
+        if lhs.memo != rhs.memo {
+            return false
+        }
+        if lhs.value != rhs.value {
+            return false
+        }
+        if lhs.unit != rhs.unit {
+            return false
+        }
+        if lhs.redeemFee != rhs.redeemFee {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(mintUrl)
+        hasher.combine(proofs)
+        hasher.combine(memo)
+        hasher.combine(value)
+        hasher.combine(unit)
+        hasher.combine(redeemFee)
+    }
+}
+
+extension TokenData: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTokenData: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TokenData {
+        return
+            try TokenData(
+                mintUrl: FfiConverterTypeMintUrl.read(from: &buf), 
+                proofs: FfiConverterSequenceTypeProof.read(from: &buf), 
+                memo: FfiConverterOptionString.read(from: &buf), 
+                value: FfiConverterTypeAmount.read(from: &buf), 
+                unit: FfiConverterTypeCurrencyUnit.read(from: &buf), 
+                redeemFee: FfiConverterOptionTypeAmount.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: TokenData, into buf: inout [UInt8]) {
+        FfiConverterTypeMintUrl.write(value.mintUrl, into: &buf)
+        FfiConverterSequenceTypeProof.write(value.proofs, into: &buf)
+        FfiConverterOptionString.write(value.memo, into: &buf)
+        FfiConverterTypeAmount.write(value.value, into: &buf)
+        FfiConverterTypeCurrencyUnit.write(value.unit, into: &buf)
+        FfiConverterOptionTypeAmount.write(value.redeemFee, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTokenData_lift(_ buf: RustBuffer) throws -> TokenData {
+    return try FfiConverterTypeTokenData.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTokenData_lower(_ value: TokenData) -> RustBuffer {
+    return FfiConverterTypeTokenData.lower(value)
+}
+
+
+/**
  * FFI-compatible Transaction
  */
 public struct Transaction {
@@ -14111,6 +15785,10 @@ public struct Transaction {
      * Payment method (e.g., Bolt11, Bolt12) for mint/melt transactions
      */
     public let paymentMethod: PaymentMethod?
+    /**
+     * Saga ID if this transaction was part of a saga
+     */
+    public let sagaId: String?
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
@@ -14156,7 +15834,10 @@ public struct Transaction {
          */paymentProof: String?, 
         /**
          * Payment method (e.g., Bolt11, Bolt12) for mint/melt transactions
-         */paymentMethod: PaymentMethod?) {
+         */paymentMethod: PaymentMethod?, 
+        /**
+         * Saga ID if this transaction was part of a saga
+         */sagaId: String?) {
         self.id = id
         self.mintUrl = mintUrl
         self.direction = direction
@@ -14171,6 +15852,7 @@ public struct Transaction {
         self.paymentRequest = paymentRequest
         self.paymentProof = paymentProof
         self.paymentMethod = paymentMethod
+        self.sagaId = sagaId
     }
 }
 
@@ -14223,6 +15905,9 @@ extension Transaction: Equatable, Hashable {
         if lhs.paymentMethod != rhs.paymentMethod {
             return false
         }
+        if lhs.sagaId != rhs.sagaId {
+            return false
+        }
         return true
     }
 
@@ -14241,6 +15926,7 @@ extension Transaction: Equatable, Hashable {
         hasher.combine(paymentRequest)
         hasher.combine(paymentProof)
         hasher.combine(paymentMethod)
+        hasher.combine(sagaId)
     }
 }
 
@@ -14268,7 +15954,8 @@ public struct FfiConverterTypeTransaction: FfiConverterRustBuffer {
                 quoteId: FfiConverterOptionString.read(from: &buf), 
                 paymentRequest: FfiConverterOptionString.read(from: &buf), 
                 paymentProof: FfiConverterOptionString.read(from: &buf), 
-                paymentMethod: FfiConverterOptionTypePaymentMethod.read(from: &buf)
+                paymentMethod: FfiConverterOptionTypePaymentMethod.read(from: &buf), 
+                sagaId: FfiConverterOptionString.read(from: &buf)
         )
     }
 
@@ -14287,6 +15974,7 @@ public struct FfiConverterTypeTransaction: FfiConverterRustBuffer {
         FfiConverterOptionString.write(value.paymentRequest, into: &buf)
         FfiConverterOptionString.write(value.paymentProof, into: &buf)
         FfiConverterOptionTypePaymentMethod.write(value.paymentMethod, into: &buf)
+        FfiConverterOptionString.write(value.sagaId, into: &buf)
     }
 }
 
@@ -15639,6 +17327,10 @@ public enum SubscriptionKind {
      */
     case bolt12MintQuote
     /**
+     * Bolt 12 Melt Quote
+     */
+    case bolt12MeltQuote
+    /**
      * Proof State
      */
     case proofState
@@ -15665,7 +17357,9 @@ public struct FfiConverterTypeSubscriptionKind: FfiConverterRustBuffer {
         
         case 3: return .bolt12MintQuote
         
-        case 4: return .proofState
+        case 4: return .bolt12MeltQuote
+        
+        case 5: return .proofState
         
         default: throw UniffiInternalError.unexpectedEnumCase
         }
@@ -15687,8 +17381,12 @@ public struct FfiConverterTypeSubscriptionKind: FfiConverterRustBuffer {
             writeInt(&buf, Int32(3))
         
         
-        case .proofState:
+        case .bolt12MeltQuote:
             writeInt(&buf, Int32(4))
+        
+        
+        case .proofState:
+            writeInt(&buf, Int32(5))
         
         }
     }
@@ -16208,30 +17906,6 @@ fileprivate struct FfiConverterOptionTypeNostrWaitInfo: FfiConverterRustBuffer {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeNostrWaitInfo.read(from: &buf)
-        default: throw UniffiInternalError.unexpectedOptionalTag
-        }
-    }
-}
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-fileprivate struct FfiConverterOptionTypeWallet: FfiConverterRustBuffer {
-    typealias SwiftType = Wallet?
-
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
-        guard let value = value else {
-            writeInt(&buf, Int8(0))
-            return
-        }
-        writeInt(&buf, Int8(1))
-        FfiConverterTypeWallet.write(value, into: &buf)
-    }
-
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
-        switch try readInt(&buf) as Int8 {
-        case 0: return nil
-        case 1: return try FfiConverterTypeWallet.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -18716,6 +20390,54 @@ private let initializationResult: InitializationResult = {
     if (uniffi_cdk_ffi_checksum_method_paymentrequestpayload_unit() != 9118) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_cdk_ffi_checksum_method_preparedmelt_amount() != 25790) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_preparedmelt_cancel() != 14185) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_preparedmelt_change_amount_without_swap() != 59536) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_preparedmelt_confirm() != 44853) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_preparedmelt_confirm_with_options() != 32808) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_preparedmelt_fee_reserve() != 24820) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_preparedmelt_fee_savings_without_swap() != 13657) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_preparedmelt_input_fee() != 22331) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_preparedmelt_input_fee_without_swap() != 59303) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_preparedmelt_operation_id() != 52002) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_preparedmelt_proofs() != 22010) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_preparedmelt_quote_id() != 54442) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_preparedmelt_requires_swap() != 26720) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_preparedmelt_swap_fee() != 15287) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_preparedmelt_total_fee() != 37542) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_preparedmelt_total_fee_with_swap() != 44787) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_cdk_ffi_checksum_method_preparedsend_amount() != 62180) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -18728,7 +20450,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_cdk_ffi_checksum_method_preparedsend_fee() != 37119) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_cdk_ffi_checksum_method_preparedsend_id() != 18191) {
+    if (uniffi_cdk_ffi_checksum_method_preparedsend_operation_id() != 33181) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_method_preparedsend_proofs() != 87) {
@@ -18776,13 +20498,13 @@ private let initializationResult: InitializationResult = {
     if (uniffi_cdk_ffi_checksum_method_wallet_calculate_fee() != 1751) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_cdk_ffi_checksum_method_wallet_check_all_pending_proofs() != 3292) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_cdk_ffi_checksum_method_wallet_check_mint_quote() != 46974) {
+    if (uniffi_cdk_ffi_checksum_method_wallet_check_all_pending_proofs() != 7291) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_method_wallet_check_proofs_spent() != 31942) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_wallet_check_send_status() != 48245) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_method_wallet_fetch_mint_info() != 41951) {
@@ -18795,6 +20517,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_method_wallet_get_keyset_fees_by_id() != 51180) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_wallet_get_pending_sends() != 56442) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_method_wallet_get_proofs_by_states() != 49189) {
@@ -18815,13 +20540,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_cdk_ffi_checksum_method_wallet_load_mint_info() != 12995) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_cdk_ffi_checksum_method_wallet_melt() != 33983) {
-        return InitializationResult.apiChecksumMismatch
-    }
     if (uniffi_cdk_ffi_checksum_method_wallet_melt_bip353_quote() != 56775) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_cdk_ffi_checksum_method_wallet_melt_bolt12_quote() != 33749) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_method_wallet_melt_human_readable() != 19936) {
@@ -18830,13 +20549,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_cdk_ffi_checksum_method_wallet_melt_lightning_address_quote() != 35934) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_cdk_ffi_checksum_method_wallet_melt_proofs() != 21294) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_cdk_ffi_checksum_method_wallet_melt_quote() != 16819) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_cdk_ffi_checksum_method_wallet_melt_quote_unified() != 12077) {
+    if (uniffi_cdk_ffi_checksum_method_wallet_melt_quote() != 14346) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_method_wallet_mint() != 9725) {
@@ -18845,19 +20558,10 @@ private let initializationResult: InitializationResult = {
     if (uniffi_cdk_ffi_checksum_method_wallet_mint_blind_auth() != 16547) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_cdk_ffi_checksum_method_wallet_mint_bolt12() != 11719) {
+    if (uniffi_cdk_ffi_checksum_method_wallet_mint_quote() != 4487) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_cdk_ffi_checksum_method_wallet_mint_bolt12_quote() != 56408) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_cdk_ffi_checksum_method_wallet_mint_quote() != 48314) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_cdk_ffi_checksum_method_wallet_mint_quote_unified() != 55597) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_cdk_ffi_checksum_method_wallet_mint_unified() != 56633) {
+    if (uniffi_cdk_ffi_checksum_method_wallet_mint_unified() != 4620) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_method_wallet_mint_url() != 6804) {
@@ -18866,16 +20570,19 @@ private let initializationResult: InitializationResult = {
     if (uniffi_cdk_ffi_checksum_method_wallet_pay_request() != 63052) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_cdk_ffi_checksum_method_wallet_prepare_melt() != 18573) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_wallet_prepare_melt_proofs() != 47387) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_cdk_ffi_checksum_method_wallet_prepare_send() != 18579) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_method_wallet_receive() != 34397) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_cdk_ffi_checksum_method_wallet_receive_proofs() != 49520) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_cdk_ffi_checksum_method_wallet_reclaim_unspent() != 64980) {
+    if (uniffi_cdk_ffi_checksum_method_wallet_receive_proofs() != 40857) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_method_wallet_refresh_access_token() != 63251) {
@@ -18884,10 +20591,16 @@ private let initializationResult: InitializationResult = {
     if (uniffi_cdk_ffi_checksum_method_wallet_refresh_keysets() != 60028) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_cdk_ffi_checksum_method_wallet_refresh_mint_quote() != 48689) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_cdk_ffi_checksum_method_wallet_restore() != 15985) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_method_wallet_revert_transaction() != 31115) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_wallet_revoke_send() != 52137) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_method_wallet_set_cat() != 29016) {
@@ -19022,6 +20735,42 @@ private let initializationResult: InitializationResult = {
     if (uniffi_cdk_ffi_checksum_method_walletdatabase_remove_keys() != 11073) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_cdk_ffi_checksum_method_walletdatabase_add_saga() != 61235) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_walletdatabase_get_saga() != 48865) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_walletdatabase_update_saga() != 19170) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_walletdatabase_delete_saga() != 41562) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_walletdatabase_get_incomplete_sagas() != 26098) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_walletdatabase_reserve_proofs() != 49254) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_walletdatabase_release_proofs() != 47667) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_walletdatabase_get_reserved_proofs() != 62407) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_walletdatabase_reserve_melt_quote() != 52928) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_walletdatabase_release_melt_quote() != 1540) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_walletdatabase_reserve_mint_quote() != 48388) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_walletdatabase_release_mint_quote() != 15741) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_cdk_ffi_checksum_method_walletpostgresdatabase_add_keys() != 56387) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -19037,10 +20786,19 @@ private let initializationResult: InitializationResult = {
     if (uniffi_cdk_ffi_checksum_method_walletpostgresdatabase_add_mint_quote() != 18330) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_cdk_ffi_checksum_method_walletpostgresdatabase_add_saga() != 62408) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_cdk_ffi_checksum_method_walletpostgresdatabase_add_transaction() != 60425) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_cdk_ffi_checksum_method_walletpostgresdatabase_delete_saga() != 52539) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_cdk_ffi_checksum_method_walletpostgresdatabase_get_balance() != 26475) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_walletpostgresdatabase_get_incomplete_sagas() != 55228) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_method_walletpostgresdatabase_get_keys() != 1364) {
@@ -19076,6 +20834,12 @@ private let initializationResult: InitializationResult = {
     if (uniffi_cdk_ffi_checksum_method_walletpostgresdatabase_get_proofs_by_ys() != 18842) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_cdk_ffi_checksum_method_walletpostgresdatabase_get_reserved_proofs() != 35811) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_walletpostgresdatabase_get_saga() != 30028) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_cdk_ffi_checksum_method_walletpostgresdatabase_get_transaction() != 16334) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -19100,6 +20864,15 @@ private let initializationResult: InitializationResult = {
     if (uniffi_cdk_ffi_checksum_method_walletpostgresdatabase_list_transactions() != 57613) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_cdk_ffi_checksum_method_walletpostgresdatabase_release_melt_quote() != 33492) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_walletpostgresdatabase_release_mint_quote() != 54182) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_walletpostgresdatabase_release_proofs() != 18557) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_cdk_ffi_checksum_method_walletpostgresdatabase_remove_keys() != 3270) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -19115,6 +20888,15 @@ private let initializationResult: InitializationResult = {
     if (uniffi_cdk_ffi_checksum_method_walletpostgresdatabase_remove_transaction() != 19625) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_cdk_ffi_checksum_method_walletpostgresdatabase_reserve_melt_quote() != 25305) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_walletpostgresdatabase_reserve_mint_quote() != 51050) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_walletpostgresdatabase_reserve_proofs() != 39792) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_cdk_ffi_checksum_method_walletpostgresdatabase_update_mint_url() != 44171) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -19124,22 +20906,16 @@ private let initializationResult: InitializationResult = {
     if (uniffi_cdk_ffi_checksum_method_walletpostgresdatabase_update_proofs_state() != 58913) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_cdk_ffi_checksum_method_walletrepository_add_mint() != 53277) {
+    if (uniffi_cdk_ffi_checksum_method_walletpostgresdatabase_update_saga() != 21044) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_cdk_ffi_checksum_method_walletrepository_create_request() != 33908) {
+    if (uniffi_cdk_ffi_checksum_method_walletrepository_add_mint() != 53277) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_method_walletrepository_get_balances() != 3069) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_cdk_ffi_checksum_method_walletrepository_get_mint_keysets() != 42103) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_cdk_ffi_checksum_method_walletrepository_get_mint_urls() != 50000) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_cdk_ffi_checksum_method_walletrepository_get_wallet() != 64139) {
+    if (uniffi_cdk_ffi_checksum_method_walletrepository_get_wallet() != 57352) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_method_walletrepository_get_wallets() != 2280) {
@@ -19148,19 +20924,13 @@ private let initializationResult: InitializationResult = {
     if (uniffi_cdk_ffi_checksum_method_walletrepository_has_mint() != 64747) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_cdk_ffi_checksum_method_walletrepository_pay_request() != 58957) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_cdk_ffi_checksum_method_walletrepository_remove_mint() != 12381) {
+    if (uniffi_cdk_ffi_checksum_method_walletrepository_remove_mint() != 12402) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_method_walletrepository_set_metadata_cache_ttl_for_all_mints() != 27302) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_method_walletrepository_set_metadata_cache_ttl_for_mint() != 23477) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_cdk_ffi_checksum_method_walletrepository_total_balance() != 11130) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_method_walletsqlitedatabase_add_keys() != 5879) {
@@ -19178,10 +20948,19 @@ private let initializationResult: InitializationResult = {
     if (uniffi_cdk_ffi_checksum_method_walletsqlitedatabase_add_mint_quote() != 62077) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_cdk_ffi_checksum_method_walletsqlitedatabase_add_saga() != 31549) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_cdk_ffi_checksum_method_walletsqlitedatabase_add_transaction() != 26193) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_cdk_ffi_checksum_method_walletsqlitedatabase_delete_saga() != 25611) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_cdk_ffi_checksum_method_walletsqlitedatabase_get_balance() != 3300) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_walletsqlitedatabase_get_incomplete_sagas() != 49190) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_method_walletsqlitedatabase_get_keys() != 41498) {
@@ -19217,6 +20996,12 @@ private let initializationResult: InitializationResult = {
     if (uniffi_cdk_ffi_checksum_method_walletsqlitedatabase_get_proofs_by_ys() != 13344) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_cdk_ffi_checksum_method_walletsqlitedatabase_get_reserved_proofs() != 55044) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_walletsqlitedatabase_get_saga() != 59736) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_cdk_ffi_checksum_method_walletsqlitedatabase_get_transaction() != 52949) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -19241,6 +21026,15 @@ private let initializationResult: InitializationResult = {
     if (uniffi_cdk_ffi_checksum_method_walletsqlitedatabase_list_transactions() != 22793) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_cdk_ffi_checksum_method_walletsqlitedatabase_release_melt_quote() != 7347) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_walletsqlitedatabase_release_mint_quote() != 48218) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_walletsqlitedatabase_release_proofs() != 3426) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_cdk_ffi_checksum_method_walletsqlitedatabase_remove_keys() != 64071) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -19256,6 +21050,15 @@ private let initializationResult: InitializationResult = {
     if (uniffi_cdk_ffi_checksum_method_walletsqlitedatabase_remove_transaction() != 38835) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_cdk_ffi_checksum_method_walletsqlitedatabase_reserve_melt_quote() != 17298) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_walletsqlitedatabase_reserve_mint_quote() != 22470) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_walletsqlitedatabase_reserve_proofs() != 20833) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_cdk_ffi_checksum_method_walletsqlitedatabase_update_mint_url() != 2109) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -19263,6 +21066,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_method_walletsqlitedatabase_update_proofs_state() != 51402) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_cdk_ffi_checksum_method_walletsqlitedatabase_update_saga() != 32010) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_cdk_ffi_checksum_constructor_npubcashclient_new() != 22894) {
