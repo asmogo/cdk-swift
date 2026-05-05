@@ -12310,7 +12310,7 @@ public struct MeltQuoteCustomResponse: Equatable, Hashable, Codable {
     /**
      * Fee reserve
      */
-    public let feeReserve: Amount
+    public let feeReserve: Amount?
     /**
      * State of the quote
      */
@@ -12350,7 +12350,7 @@ public struct MeltQuoteCustomResponse: Equatable, Hashable, Codable {
          */amount: Amount, 
         /**
          * Fee reserve
-         */feeReserve: Amount, 
+         */feeReserve: Amount?, 
         /**
          * State of the quote
          */state: QuoteState, 
@@ -12399,7 +12399,7 @@ public struct FfiConverterTypeMeltQuoteCustomResponse: FfiConverterRustBuffer {
             try MeltQuoteCustomResponse(
                 quote: FfiConverterString.read(from: &buf), 
                 amount: FfiConverterTypeAmount.read(from: &buf), 
-                feeReserve: FfiConverterTypeAmount.read(from: &buf), 
+                feeReserve: FfiConverterOptionTypeAmount.read(from: &buf), 
                 state: FfiConverterTypeQuoteState.read(from: &buf), 
                 expiry: FfiConverterUInt64.read(from: &buf), 
                 paymentProof: FfiConverterOptionString.read(from: &buf), 
@@ -12412,7 +12412,7 @@ public struct FfiConverterTypeMeltQuoteCustomResponse: FfiConverterRustBuffer {
     public static func write(_ value: MeltQuoteCustomResponse, into buf: inout [UInt8]) {
         FfiConverterString.write(value.quote, into: &buf)
         FfiConverterTypeAmount.write(value.amount, into: &buf)
-        FfiConverterTypeAmount.write(value.feeReserve, into: &buf)
+        FfiConverterOptionTypeAmount.write(value.feeReserve, into: &buf)
         FfiConverterTypeQuoteState.write(value.state, into: &buf)
         FfiConverterUInt64.write(value.expiry, into: &buf)
         FfiConverterOptionString.write(value.paymentProof, into: &buf)
